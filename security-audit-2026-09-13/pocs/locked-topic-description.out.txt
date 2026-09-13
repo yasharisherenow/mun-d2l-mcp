@@ -1,0 +1,5 @@
+{
+  "listedLockedDescription": "SYNTHETIC_LOCKED_SECRET",
+  "searchSnippetContainsDescription": true,
+  "directReadResult": "PERMISSION_DENIED"
+}

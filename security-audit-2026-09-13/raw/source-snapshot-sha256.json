@@ -1,0 +1,94 @@
+[
+  {
+    "path": "package-lock.json",
+    "sha256": "801b857709194ff7ccab2e94a3ff64b415cdb5e2e8eeb020cac78a91d2ba441a"
+  },
+  {
+    "path": "package.json",
+    "sha256": "ed8b3ae034411afb5a35a3bd2f0de0558c5a2e2c234100beab6a7e8b30153bdf"
+  },
+  {
+    "path": "README.md",
+    "sha256": "f315df7f0addc2896c01ce6df33a82a7490275cf56627c77306efe693c2ce747"
+  },
+  {
+    "path": "scripts\\smoke.mjs",
+    "sha256": "a4c9a58686ea635b32867c55369a1b3031fb514a2c48b49cf01408df264d2762"
+  },
+  {
+    "path": "scripts\\verify-ui.mjs",
+    "sha256": "4c2a11ee38d1608203a9cedd105b0f64579b11da4ec8544c488d7c94dedc1edc"
+  },
+  {
+    "path": "SECURITY.md",
+    "sha256": "0499c66a117e840a1958cfd6975682830ce7b995e0f0f70584f807705d54afdf"
+  },
+  {
+    "path": "src\\api\\client.ts",
+    "sha256": "3324acb4d6ff161a43a67614ef3a128826056bbdac603b0fb992a1667db3ac48"
+  },
+  {
+    "path": "src\\auth\\login.ts",
+    "sha256": "ebe49a2d31137370be3eecdd1be30a92033c90e6f2e2b2d898265d81db182d59"
+  },
+  {
+    "path": "src\\auth\\store.ts",
+    "sha256": "b2fbca8cb6dbb2c0e81f39ad6b523dd8b035de35ce9962e715ef933438d41f93"
+  },
+  {
+    "path": "src\\cli.ts",
+    "sha256": "876fde335d6ddcf6f1ac99ac4ca44f5f422e07a05de075bf5afa164c56df67ea"
+  },
+  {
+    "path": "src\\config.ts",
+    "sha256": "3439ef14edb519823e6670aeb65ec0267450311f553f57c5e3ce518f4b7755cf"
+  },
+  {
+    "path": "src\\errors.ts",
+    "sha256": "f0877ffbc027193c6c056c6e54b68e61e80e9b4ce21de3719bdd44a852cddb99"
+  },
+  {
+    "path": "src\\server.ts",
+    "sha256": "e2849d004d30080c58a67df8a8f5ac331bc2d3c789a6d4b186adbff6e0dced64"
+  },
+  {
+    "path": "src\\tools\\format.ts",
+    "sha256": "26e5915a900a3ed79e5024db9f2cc5f6f184bf2420ae098b15e8a0d22d581d16"
+  },
+  {
+    "path": "src\\tools\\service.ts",
+    "sha256": "bc909d65592482e312cb9608029a80f86b7c85a87a8c377b3d2da82db2956dfd"
+  },
+  {
+    "path": "tests\\auth.test.ts",
+    "sha256": "4cad5e0aa31da9a2b2507a4c273b250941f2d07daffb57d89e7760ba7d49afb4"
+  },
+  {
+    "path": "tests\\client.test.ts",
+    "sha256": "cdaaa8f35523f27008eae1b063932c12efa910fc24e81e9a6c54e97841fa0620"
+  },
+  {
+    "path": "tests\\config.test.ts",
+    "sha256": "86da2153a920e423ae22c630478a140ada9a7330930195e6deb135a225171edb"
+  },
+  {
+    "path": "tests\\format.test.ts",
+    "sha256": "e5dea6043b019ce9bb9a3a14339eafe91a5114c822fa984c2aba05aa3dcfe600"
+  },
+  {
+    "path": "tests\\server.test.ts",
+    "sha256": "6675e969fc16df5de0524f9a5838fce05308b0ffe481082513b09e375668effc"
+  },
+  {
+    "path": "tests\\service.test.ts",
+    "sha256": "805a0fbb4c39d4f972226897532eadf4e4fe34546f0b7010a74acbd267103b7c"
+  },
+  {
+    "path": "tests\\store.test.ts",
+    "sha256": "0b4f4f116f33e3df4c59a56ac712627b86486a841587fb1ff42018817e49d6c8"
+  },
+  {
+    "path": "tsconfig.json",
+    "sha256": "43e615e746ba68d97791c4edc7f1b4ba278dd425b207af2e979a13b7aefaaf7a"
+  }
+]

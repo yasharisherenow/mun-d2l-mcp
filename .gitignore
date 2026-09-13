@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env*
+*.log
+*session*.json
+playwright-report/
+test-results/
+security-audit-*/isolated-install/
+*.tgz
+.DS_Store

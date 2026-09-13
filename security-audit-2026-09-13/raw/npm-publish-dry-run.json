@@ -1,0 +1,437 @@
+npm warn gitignore-fallback No .npmignore file found, using .gitignore for file exclusion. Consider creating a .npmignore file to explicitly control published files.
+npm warn This command requires you to be logged in to https://registry.npmjs.org/ (dry-run)
+npm notice Publishing to https://registry.npmjs.org/ with tag latest and default access (dry-run)
+{
+  "id": "mun-d2l-mcp@0.1.0",
+  "name": "mun-d2l-mcp",
+  "version": "0.1.0",
+  "size": 169009,
+  "unpackedSize": 723680,
+  "shasum": "9087bf8000cf91773eaee9bf6ae6d6fe11c08fc9",
+  "integrity": "sha512-q64i68BJUUC1r9ZJWcjvjcsk9+AQFM0dpBswMAZY45iUYg8qgsDCaT786mCfqn5IZtI+H9Ve6ULo4YSpGaLWKw==",
+  "filename": "mun-d2l-mcp-0.1.0.tgz",
+  "files": [
+    {
+      "path": "README.md",
+      "size": 10842,
+      "mode": 420
+    },
+    {
+      "path": "SECURITY.md",
+      "size": 2729,
+      "mode": 420
+    },
+    {
+      "path": "dist/api/client.js",
+      "size": 8081,
+      "mode": 420
+    },
+    {
+      "path": "dist/api/client.js.map",
+      "size": 7744,
+      "mode": 420
+    },
+    {
+      "path": "dist/auth/login.js",
+      "size": 8246,
+      "mode": 420
+    },
+    {
+      "path": "dist/auth/login.js.map",
+      "size": 7946,
+      "mode": 420
+    },
+    {
+      "path": "dist/auth/store.js",
+      "size": 5027,
+      "mode": 420
+    },
+    {
+      "path": "dist/auth/store.js.map",
+      "size": 5894,
+      "mode": 420
+    },
+    {
+      "path": "dist/cli.js",
+      "size": 5529,
+      "mode": 420
+    },
+    {
+      "path": "dist/cli.js.map",
+      "size": 5369,
+      "mode": 420
+    },
+    {
+      "path": "dist/config.js",
+      "size": 1061,
+      "mode": 420
+    },
+    {
+      "path": "dist/config.js.map",
+      "size": 1002,
+      "mode": 420
+    },
+    {
+      "path": "dist/errors.js",
+      "size": 443,
+      "mode": 420
+    },
+    {
+      "path": "dist/errors.js.map",
+      "size": 482,
+      "mode": 420
+    },
+    {
+      "path": "dist/server.js",
+      "size": 5944,
+      "mode": 420
+    },
+    {
+      "path": "dist/server.js.map",
+      "size": 6082,
+      "mode": 420
+    },
+    {
+      "path": "dist/tools/format.js",
+      "size": 2522,
+      "mode": 420
+    },
+    {
+      "path": "dist/tools/format.js.map",
+      "size": 2893,
+      "mode": 420
+    },
+    {
+      "path": "dist/tools/service.js",
+      "size": 25023,
+      "mode": 420
+    },
+    {
+      "path": "dist/tools/service.js.map",
+      "size": 26970,
+      "mode": 420
+    },
+    {
+      "path": "package.json",
+      "size": 1107,
+      "mode": 420
+    },
+    {
+      "path": "scripts/smoke.mjs",
+      "size": 1708,
+      "mode": 420
+    },
+    {
+      "path": "scripts/verify-ui.mjs",
+      "size": 3811,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/inventory.json",
+      "size": 2104,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/isolated-install/package-lock.json",
+      "size": 109396,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/isolated-install/package.json",
+      "size": 1107,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/notes/manual-auth-crypto.md",
+      "size": 15001,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/notes/supply-config.md",
+      "size": 10096,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/notes/tools-business.md",
+      "size": 15948,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/poc-tests/resource-limits.test.ts",
+      "size": 1153,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/pocs/locked-topic-description.mjs",
+      "size": 1606,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/pocs/locked-topic-description.out.txt",
+      "size": 151,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/pocs/unbounded-announcement-output.mjs",
+      "size": 1219,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/pocs/unbounded-announcement-output.out.txt",
+      "size": 58,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/analyze-lock.mjs",
+      "size": 1149,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/build-install-script-review.txt",
+      "size": 55594,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/build.txt",
+      "size": 38,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/codeql-status.json",
+      "size": 395,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/config-deployment-files.txt",
+      "size": 39,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/extended-tool-preflight.txt",
+      "size": 795,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/local-test-summary.json",
+      "size": 64,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/lock-analysis.json",
+      "size": 758,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/manifest-summary.json",
+      "size": 883,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-audit-all.json",
+      "size": 387,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-audit-production.json",
+      "size": 387,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-ci-ignore-scripts-exit.txt",
+      "size": 13,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-ci-ignore-scripts.txt",
+      "size": 28,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-ls-all.json",
+      "size": 50849,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-ls-production.json",
+      "size": 37790,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-outdated.json",
+      "size": 705,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-pack-dry-run.json",
+      "size": 9380,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-publish-dry-run.json",
+      "size": 0,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/npm-tree.json",
+      "size": 50849,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/optional-tools.txt",
+      "size": 102,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/poc-resource-limits.json",
+      "size": 1090,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/repository-files.txt",
+      "size": 423,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/secret-scan.json",
+      "size": 43,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/secret-scan.mjs",
+      "size": 1465,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/security-audit-command.txt",
+      "size": 108,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/source-numbered.txt",
+      "size": 100721,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/supply-chain-collector-status.json",
+      "size": 307,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/tool-preflight.txt",
+      "size": 855,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/vitest-console.txt",
+      "size": 244,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/raw/vitest-results.json",
+      "size": 17125,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/rulesets.json",
+      "size": 539,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/SCAN_PLAN.md",
+      "size": 1601,
+      "mode": 420
+    },
+    {
+      "path": "security-audit-2026-09-13/scans.json",
+      "size": 393,
+      "mode": 420
+    },
+    {
+      "path": "src/api/client.ts",
+      "size": 7598,
+      "mode": 420
+    },
+    {
+      "path": "src/auth/login.ts",
+      "size": 7456,
+      "mode": 420
+    },
+    {
+      "path": "src/auth/store.ts",
+      "size": 4936,
+      "mode": 420
+    },
+    {
+      "path": "src/cli.ts",
+      "size": 4704,
+      "mode": 420
+    },
+    {
+      "path": "src/config.ts",
+      "size": 1003,
+      "mode": 420
+    },
+    {
+      "path": "src/errors.ts",
+      "size": 428,
+      "mode": 420
+    },
+    {
+      "path": "src/server.ts",
+      "size": 6029,
+      "mode": 420
+    },
+    {
+      "path": "src/tools/format.ts",
+      "size": 2443,
+      "mode": 420
+    },
+    {
+      "path": "src/tools/service.ts",
+      "size": 24597,
+      "mode": 420
+    },
+    {
+      "path": "tests/auth.test.ts",
+      "size": 4536,
+      "mode": 420
+    },
+    {
+      "path": "tests/client.test.ts",
+      "size": 4690,
+      "mode": 420
+    },
+    {
+      "path": "tests/config.test.ts",
+      "size": 695,
+      "mode": 420
+    },
+    {
+      "path": "tests/format.test.ts",
+      "size": 1472,
+      "mode": 420
+    },
+    {
+      "path": "tests/server.test.ts",
+      "size": 2639,
+      "mode": 420
+    },
+    {
+      "path": "tests/service.test.ts",
+      "size": 7492,
+      "mode": 420
+    },
+    {
+      "path": "tests/store.test.ts",
+      "size": 3173,
+      "mode": 420
+    },
+    {
+      "path": "tsconfig.json",
+      "size": 376,
+      "mode": 420
+    }
+  ],
+  "entryCount": 84,
+  "bundled": []
+}

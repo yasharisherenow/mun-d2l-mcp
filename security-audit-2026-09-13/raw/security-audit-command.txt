@@ -1,0 +1,5 @@
+
+> mun-d2l-mcp@0.1.0 security:audit
+> npm audit --omit=dev --audit-level=high
+
+found 0 vulnerabilities

@@ -1,0 +1,46 @@
+{
+  "name": "mun-d2l-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "dist/",
+    "README.md",
+    "SECURITY.md"
+  ],
+  "description": "An independent, local, read-only MUN Brightspace MCP server",
+  "type": "module",
+  "bin": {
+    "mun-d2l-mcp": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
+    "smoke": "node scripts/smoke.mjs",
+    "verify:ui": "node scripts/verify-ui.mjs",
+    "login": "node dist/cli.js login",
+    "status": "node dist/cli.js status",
+    "doctor": "node dist/cli.js doctor",
+    "renew": "node dist/cli.js renew",
+    "test-course": "node dist/cli.js test-course",
+    "logout": "node dist/cli.js logout",
+    "start": "node dist/cli.js serve"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@napi-rs/keyring": "2.0.0",
+    "html-to-text": "10.0.1",
+    "playwright": "1.63.0",
+    "unpdf": "1.8.1",
+    "zod": "4.6.2"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "9.0.4",
+    "@types/node": "22.20.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  }
+}

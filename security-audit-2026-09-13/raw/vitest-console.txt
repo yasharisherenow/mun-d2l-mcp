@@ -1,0 +1,6 @@
+
+> mun-d2l-mcp@0.1.0 test
+> vitest run --reporter=json --outputFile=security-audit-2026-09-13\raw\vitest-results.json
+
+JSON report written to security-audit-2026-09-13/raw/vitest-results.json
+

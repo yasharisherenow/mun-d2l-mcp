@@ -1,0 +1,10 @@
+{
+  "scans": [],
+  "failed": [{
+    "scanner": "semgrep",
+    "reason": "Semgrep CLI unavailable; Python, uv, Bash, WSL, Docker, and Podman were also unavailable, so the installed run-scans.sh could not execute on this Windows host.",
+    "preflight": "raw/tool-preflight.txt and raw/extended-tool-preflight.txt"
+  }],
+  "skipped": [],
+  "coveredNothing": ["All selected Semgrep rulesets"]
+}

@@ -1,0 +1,55 @@
+> docker version
+'docker' is not recognized as an internal or external command,
+operable program or batch file.
+exit=1
+> podman version
+'podman' is not recognized as an internal or external command,
+operable program or batch file.
+exit=1
+> winget --version
+v1.29.290
+exit=0
+> gh extension list
+exit=0
+> gh codeql --help
+unknown command "codeql" for "gh"
+
+Usage:  gh <command> <subcommand> [flags]
+
+Available commands:
+  agent-task
+  alias
+  api
+  attestation
+  auth
+  browse
+  cache
+  co
+  codespace
+  completion
+  config
+  copilot
+  discussion
+  extension
+  gist
+  gpg-key
+  issue
+  label
+  licenses
+  org
+  pr
+  preview
+  project
+  release
+  repo
+  ruleset
+  run
+  search
+  secret
+  skill
+  ssh-key
+  status
+  variable
+  workflow
+
+exit=1

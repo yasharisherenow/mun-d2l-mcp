@@ -1,0 +1,4 @@
+
+> mun-d2l-mcp@0.1.0 build
+> tsc
+

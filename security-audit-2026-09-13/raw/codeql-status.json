@@ -1,0 +1,9 @@
+{
+  "scanner": "CodeQL",
+  "status": "unavailable",
+  "language": "javascript-typescript",
+  "plannedSuites": ["javascript-security-and-quality.qls", "javascript-security-experimental.qls"],
+  "databaseCreated": false,
+  "extractionQualityVerified": false,
+  "reason": "CodeQL CLI was not installed; no gh CodeQL extension was present. Database extraction and query execution did not occur."
+}

@@ -1,0 +1,24 @@
+{
+  "@napi-rs/keyring": {
+    "current": "2.0.0",
+    "wanted": "2.0.0",
+    "latest": "2.1.0",
+    "dependent": "D2L MCP SERVER",
+    "location": "node_modules\\@napi-rs\\keyring"
+  },
+  "@types/node": {
+    "current": "22.20.2",
+    "wanted": "22.20.2",
+    "latest": "26.5.1",
+    "dependent": "D2L MCP SERVER",
+    "location": "node_modules\\@types\\node"
+  },
+  "zod": {
+    "current": "4.6.2",
+    "wanted": "4.6.2",
+    "latest": "4.6.4",
+    "dependent": "D2L MCP SERVER",
+    "location": "node_modules\\zod"
+  }
+}
+

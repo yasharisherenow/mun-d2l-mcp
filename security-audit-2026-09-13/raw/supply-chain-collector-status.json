@@ -1,0 +1,6 @@
+{
+  "collector": "Trail of Bits supply-chain-risk-auditor",
+  "status": "unavailable",
+  "reason": "The deterministic collector requires uv/Python; neither runtime was available.",
+  "fallbacks": ["npm audit --json", "npm audit --omit=dev --json", "npm ls --all --json", "manual lockfile/script review"]
+}

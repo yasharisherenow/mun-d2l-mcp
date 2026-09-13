@@ -1,0 +1,32 @@
+{
+  "lockfileVersion": 3,
+  "packageCount": 211,
+  "nonRegistry": [],
+  "missingIntegrity": [],
+  "installScripts": [
+    {
+      "path": "node_modules/fsevents",
+      "name": "fsevents",
+      "version": "2.3.3",
+      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "hasIntegrity": true,
+      "hasInstallScript": true,
+      "dev": true,
+      "optional": true
+    }
+  ],
+  "rootDependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@napi-rs/keyring": "2.0.0",
+    "html-to-text": "10.0.1",
+    "playwright": "1.63.0",
+    "unpdf": "1.8.1",
+    "zod": "4.6.2"
+  },
+  "rootDevDependencies": {
+    "@types/html-to-text": "9.0.4",
+    "@types/node": "22.20.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  }
+}

@@ -1,0 +1,7 @@
+gitleaks=False
+trivy=False
+grype=False
+syft=False
+osv-scanner=False
+njsscan=False
+eslint=False

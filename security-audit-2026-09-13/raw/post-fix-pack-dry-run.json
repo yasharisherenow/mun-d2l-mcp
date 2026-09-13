@@ -1,0 +1,141 @@
+[
+  {
+    "id": "mun-d2l-mcp@0.1.0",
+    "name": "mun-d2l-mcp",
+    "version": "0.1.0",
+    "size": 36775,
+    "unpackedSize": 157363,
+    "shasum": "204854096544b3d97162da7c3564378b777081cd",
+    "integrity": "sha512-3w0exNT7xbzAkfZ3j3AvIgkSctxnMcREcvmIDB8w3Xmgw/2926JCmo0yM36t626sMu4imCkajeksLy8vaI1BaA==",
+    "filename": "mun-d2l-mcp-0.1.0.tgz",
+    "files": [
+      {
+        "path": "README.md",
+        "size": 11679,
+        "mode": 420
+      },
+      {
+        "path": "SECURITY.md",
+        "size": 2729,
+        "mode": 420
+      },
+      {
+        "path": "dist/api/client.js",
+        "size": 10487,
+        "mode": 420
+      },
+      {
+        "path": "dist/api/client.js.map",
+        "size": 9456,
+        "mode": 420
+      },
+      {
+        "path": "dist/auth/login.js",
+        "size": 8246,
+        "mode": 420
+      },
+      {
+        "path": "dist/auth/login.js.map",
+        "size": 7946,
+        "mode": 420
+      },
+      {
+        "path": "dist/auth/store.js",
+        "size": 5193,
+        "mode": 420
+      },
+      {
+        "path": "dist/auth/store.js.map",
+        "size": 6044,
+        "mode": 420
+      },
+      {
+        "path": "dist/cli.js",
+        "size": 5529,
+        "mode": 420
+      },
+      {
+        "path": "dist/cli.js.map",
+        "size": 5369,
+        "mode": 420
+      },
+      {
+        "path": "dist/config.js",
+        "size": 1061,
+        "mode": 420
+      },
+      {
+        "path": "dist/config.js.map",
+        "size": 1002,
+        "mode": 420
+      },
+      {
+        "path": "dist/errors.js",
+        "size": 443,
+        "mode": 420
+      },
+      {
+        "path": "dist/errors.js.map",
+        "size": 482,
+        "mode": 420
+      },
+      {
+        "path": "dist/server.js",
+        "size": 6260,
+        "mode": 420
+      },
+      {
+        "path": "dist/server.js.map",
+        "size": 6259,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/document-worker.js",
+        "size": 3104,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/document-worker.js.map",
+        "size": 3088,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/extract.js",
+        "size": 2253,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/extract.js.map",
+        "size": 2271,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/format.js",
+        "size": 2716,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/format.js.map",
+        "size": 3130,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/service.js",
+        "size": 24653,
+        "mode": 420
+      },
+      {
+        "path": "dist/tools/service.js.map",
+        "size": 26790,
+        "mode": 420
+      },
+      {
+        "path": "package.json",
+        "size": 1173,
+        "mode": 420
+      }
+    ],
+    "entryCount": 25,
+    "bundled": []
+  }
+]
