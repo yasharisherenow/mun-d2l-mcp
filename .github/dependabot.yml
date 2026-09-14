@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    allow:
+      - dependency-type: 'direct'
+      - dependency-type: 'indirect'
+    reviewers:
+      - 'yasharisherenow'
+    automerge-options:
+      automerge-type: 'auto'
+      automerge-minor: true
+      automerge-patch: true
