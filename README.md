@@ -209,9 +209,11 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
 
 ## Troubleshooting
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive guidance on common issues, Credential Manager setup, session renewal, error codes, and recovery steps.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive guidance on common issues, Credential Manager setup, session renewal, and recovery steps.
 
-Quick reference for error codes:
+For detailed error code reference with causes and recovery steps, see [ERROR_CODES.md](ERROR_CODES.md).
+
+Quick reference for common error codes:
 
 | Error | Action |
 | --- | --- |

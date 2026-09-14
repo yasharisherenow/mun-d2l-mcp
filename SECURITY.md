@@ -40,6 +40,10 @@ Use MUN's account controls when server-side revocation is required.
 
 ## Before publishing a release
 
+For a detailed release checklist and process, see [.github/RELEASE.md](.github/RELEASE.md).
+
+Quick checklist:
+
 1. Run `npm ci`, `npm run build`, `npm test`, and `npm run security:audit`.
 2. Scan the repository and Git history for credentials, session files, logs, and user data.
 3. Review dependency lockfile changes and publish from a clean checkout.
