@@ -1,8 +1,12 @@
 # MUN D2L MCP
 
-Your own local, read-only Brightspace MCP server for Memorial University.
-Written independently in TypeScript; not a fork of another Brightspace MCP project.
-The project is private and is not published to npm.
+**This is an MCP server exclusively for Memorial University of Newfoundland and Labrador (MUN) students.** It provides a local, read-only interface to your Brightspace D2L courses with built-in authentication using Windows Credential Manager. Written independently in TypeScript; not a fork of another Brightspace MCP project. The project is private and is not published to npm.
+
+### Scope & Limitations
+
+- **For MUN students only**: This tool integrates with Memorial University's specific Brightspace instance at `online.mun.ca`. It is not a generic LMS adapter and will not work with other universities' Brightspace or D2L installations.
+- **Windows-only**: Requires Windows 10 or newer and Windows Credential Manager. Does not run on macOS or Linux.
+- **Read-only**: Provides access to course content, grades, and assignments. Does not support submissions, posting, or any write operations.
 
 ![MUN D2L MCP architecture](docs/assets/architecture.png)
 
@@ -56,11 +60,28 @@ This adds a separate MCP entry and preserves other servers. Restart Codex or rel
 MCP connections if the tools do not appear in an existing session. Rebuild after
 source changes and restart the MCP connection. There is no automatic updater.
 
-The server proactively renews its session every four hours by default. To choose a
-different interval, set `MUN_D2L_SESSION_HOURS` on the MCP entry. It accepts decimal
-hours from `0.25` to `168`; use `0` to disable scheduled renewal and refresh only
-after Brightspace rejects the session. For example, eight hours:
+## Session renewal and timeout handling
 
+The server proactively renews its Brightspace session every four hours by default. This means:
+
+- **Renewal timing**: The server checks and renews your session on a schedule you control via `MUN_D2L_SESSION_HOURS`
+- **Silent renewal**: Most renewal attempts happen silently in the background using your saved MUN login session state (encrypted Brightspace and MUN Login cookies)
+- **What happens if renewal fails**: If silent renewal fails (typically because MUN's SSO session has expired or policy requires MFA), the next Codex tool call will attempt to open an interactive browser login. This only happens when needed, not on every renewal failure.
+- **When renewal times out**: If a renewal attempt hangs for more than 30 seconds, it is cancelled and the server continues using the existing session. The next scheduled renewal will try again.
+
+### Configuring the renewal interval
+
+To change when renewal happens, set `MUN_D2L_SESSION_HOURS` on the MCP entry. It accepts decimal hours from `0.25` to `168`; use `0` to disable scheduled renewal and refresh only when Brightspace rejects the session.
+
+**Default (4 hours):**
+```powershell
+codex mcp remove mun-d2l-mcp
+$munNode = (Get-Command node).Source
+$munEntry = Join-Path (Get-Location) 'dist/cli.js'
+codex mcp add mun-d2l-mcp --env "LOCALAPPDATA=$env:LOCALAPPDATA" -- $munNode $munEntry serve
+```
+
+**Custom example (8 hours):**
 ```powershell
 codex mcp remove mun-d2l-mcp
 $munNode = (Get-Command node).Source
@@ -68,8 +89,17 @@ $munEntry = Join-Path (Get-Location) 'dist/cli.js'
 codex mcp add mun-d2l-mcp --env "LOCALAPPDATA=$env:LOCALAPPDATA" --env "MUN_D2L_SESSION_HOURS=8" -- $munNode $munEntry serve
 ```
 
-This interval controls when the server attempts silent renewal; it cannot extend
-MUN's own login or MFA lifetime. Restart the MCP connection after changing it.
+**Quick renewal (15 minutes) for testing:**
+```powershell
+codex mcp remove mun-d2l-mcp
+$munNode = (Get-Command node).Source
+$munEntry = Join-Path (Get-Location) 'dist/cli.js'
+codex mcp add mun-d2l-mcp --env "LOCALAPPDATA=$env:LOCALAPPDATA" --env "MUN_D2L_SESSION_HOURS=0.25" -- $munNode $munEntry serve
+```
+
+This interval controls when the server attempts silent renewal; it cannot extend MUN's own login or MFA lifetime. Restart the MCP connection after changing it.
+
+For troubleshooting session renewal issues, including "Session expired" errors, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md#session-renewal).
 
 Try:
 
@@ -178,6 +208,10 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
   written to the project by the normal server workflow.
 
 ## Troubleshooting
+
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive guidance on common issues, Credential Manager setup, session renewal, error codes, and recovery steps.
+
+Quick reference for error codes:
 
 | Error | Action |
 | --- | --- |
