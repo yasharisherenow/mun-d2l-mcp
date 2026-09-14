@@ -40,13 +40,18 @@ Use MUN's account controls when server-side revocation is required.
 
 ## Before publishing a release
 
+For a detailed release checklist and process, see [.github/RELEASE.md](.github/RELEASE.md).
+
+Quick checklist:
+
 1. Run `npm ci`, `npm run build`, `npm test`, and `npm run security:audit`.
 2. Scan the repository and Git history for credentials, session files, logs, and user data.
 3. Review dependency lockfile changes and publish from a clean checkout.
-4. Require the repository's pinned CI, CodeQL, Semgrep, secret scan, and dependency
+4. Verify all GitHub Actions CI/CD workflows pass (Build, Test, Smoke Test).
+5. Require the repository's pinned CI, CodeQL, Semgrep, secret scan, and dependency
    review jobs to pass.
-5. Sign release artifacts and publish checksums through the official release workflow.
-6. Keep remote transports disabled unless standards-compliant OAuth, per-user session
+6. Sign release artifacts and publish checksums through the official release workflow.
+7. Keep remote transports disabled unless standards-compliant OAuth, per-user session
    isolation, HTTPS, abuse controls, and a separate security review are implemented.
 
 ## Reporting a vulnerability

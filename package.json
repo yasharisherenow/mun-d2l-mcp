@@ -19,6 +19,7 @@
     "security:audit": "npm audit --omit=dev --audit-level=high",
     "smoke": "node scripts/smoke.mjs",
     "verify:ui": "node scripts/verify-ui.mjs",
+    "release:version": "node scripts/release.mjs",
     "login": "node dist/cli.js login",
     "status": "node dist/cli.js status",
     "doctor": "node dist/cli.js doctor",
