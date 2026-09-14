@@ -1,5 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, open, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Entry } from '@napi-rs/keyring';
 import type { BrowserContext } from 'playwright';
@@ -37,10 +37,53 @@ function sanitizeSession(value: unknown): Session {
 
 export class SessionStore {
   readonly file: string;
+  readonly lockFile: string;
   constructor(
     readonly directory = sessionDirectory(),
     private readonly keys: KeyStore = new Entry('mun-d2l-mcp', BASE_URL),
-  ) { this.file = join(directory, 'session.encrypted.json'); }
+  ) {
+    this.file = join(directory, 'session.encrypted.json');
+    this.lockFile = join(directory, 'session.lock');
+  }
+
+  async withLifecycleLock<T>(action: () => Promise<T>, timeoutMs = 11 * 60_000): Promise<T> {
+    await mkdir(this.directory, { recursive: true });
+    const deadline = Date.now() + timeoutMs;
+    let handle: Awaited<ReturnType<typeof open>> | undefined;
+    while (!handle) {
+      try {
+        handle = await open(this.lockFile, 'wx', 0o600);
+        await handle.writeFile(JSON.stringify({ pid: process.pid, acquiredAt: new Date().toISOString() }));
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw new AppError('SESSION_LOCK_FAILED', 'Cannot lock the local session lifecycle.');
+        try {
+          const info = await stat(this.lockFile);
+          if (Date.now() - info.mtimeMs > 15 * 60_000) {
+            const staleFile = `${this.lockFile}.stale-${process.pid}-${randomBytes(8).toString('hex')}`;
+            try {
+              await rename(this.lockFile, staleFile);
+              await rm(staleFile, { force: true });
+            } catch (renameError) {
+              if (!['ENOENT', 'EACCES', 'EPERM'].includes((renameError as NodeJS.ErrnoException).code ?? '')) {
+                throw new AppError('SESSION_LOCK_FAILED', 'Cannot recover the local session lifecycle lock.');
+              }
+            }
+            continue;
+          }
+        } catch (statError) {
+          if ((statError as NodeJS.ErrnoException).code === 'ENOENT') continue;
+          throw new AppError('SESSION_LOCK_FAILED', 'Cannot inspect the local session lifecycle lock.');
+        }
+        if (Date.now() >= deadline) throw new AppError('SESSION_BUSY', 'Another login, renewal, or logout operation is still running.');
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    try { return await action(); }
+    finally {
+      await handle.close().catch(() => undefined);
+      await rm(this.lockFile, { force: true }).catch(() => undefined);
+    }
+  }
 
   async save(session: Session): Promise<void> {
     let secret: string | null | undefined;
@@ -90,8 +133,10 @@ export class SessionStore {
   }
 
   async clear(): Promise<void> {
-    await rm(this.file, { force: true });
-    try { if (this.keys.getPassword()) this.keys.deletePassword(); }
-    catch { throw new AppError('KEYRING_UNAVAILABLE', 'Session file removed; the encryption key could not be removed from Windows Credential Manager.'); }
+    await this.withLifecycleLock(async () => {
+      await rm(this.file, { force: true });
+      try { if (this.keys.getPassword()) this.keys.deletePassword(); }
+      catch { throw new AppError('KEYRING_UNAVAILABLE', 'Session file removed; the encryption key could not be removed from Windows Credential Manager.'); }
+    });
   }
 }

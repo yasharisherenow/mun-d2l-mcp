@@ -15,7 +15,7 @@ function api() {
   };
 }
 function store() {
-  return { load: vi.fn(), save: vi.fn(), clear: vi.fn() } as unknown as SessionStore;
+  return { load: vi.fn(), save: vi.fn(), clear: vi.fn(), withLifecycleLock: vi.fn((action: () => Promise<unknown>) => action()) } as unknown as SessionStore;
 }
 function browser() {
   const page = { on: vi.fn(), goto: vi.fn(), url: vi.fn(() => `${BASE_URL}/d2l/home`), isClosed: vi.fn(() => false) };

@@ -26,7 +26,7 @@ async function verifiedClient(session: Session) {
 }
 
 /** Try MUN's existing SSO cookies in a hidden browser; never enters credentials or triggers MFA intentionally. */
-export async function refreshSession(store: SessionStore): Promise<void> {
+async function refreshSessionUnlocked(store: SessionStore): Promise<void> {
   const existing = await store.load();
   if (!existing) throw new AppError('AUTH_REQUIRED', 'No saved session. Run npm run login in the project folder.');
   const browser = await chromium.launch({ headless: true });
@@ -71,6 +71,10 @@ export async function refreshSession(store: SessionStore): Promise<void> {
   } finally { await browser.close(); }
 }
 
+export async function refreshSession(store: SessionStore): Promise<void> {
+  return store.withLifecycleLock(() => refreshSessionUnlocked(store));
+}
+
 async function refreshOnce(store: SessionStore) {
   refreshInProgress ??= refreshSession(store).finally(() => { refreshInProgress = undefined; });
   return refreshInProgress;
@@ -98,7 +102,7 @@ export async function withSession<T>(store: SessionStore, action: (client: Brigh
   finally { await connection.context.dispose(); }
 }
 
-export async function login(store = new SessionStore(), timeoutMs = 10 * 60_000): Promise<void> {
+async function loginUnlocked(store: SessionStore, timeoutMs: number): Promise<void> {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -152,4 +156,8 @@ export async function login(store = new SessionStore(), timeoutMs = 10 * 60_000)
     process.removeListener('SIGTERM', stop);
     await browser.close();
   }
+}
+
+export async function login(store = new SessionStore(), timeoutMs = 10 * 60_000): Promise<void> {
+  return store.withLifecycleLock(() => loginUnlocked(store, timeoutMs), timeoutMs + 60_000);
 }

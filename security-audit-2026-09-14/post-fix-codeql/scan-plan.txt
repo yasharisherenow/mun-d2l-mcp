@@ -1,0 +1,13 @@
+CodeQL post-fix scan plan recorded before execution
+Date: 2026-09-14
+Source revision: 91d08f0f91198178cd7b9a8b25474f8d03170c8d plus the current uncommitted working tree
+Language: javascript-typescript
+CLI: CodeQL 2.27.0
+Database scope: src, scripts, tests, package manifests, and security-relevant repository configuration
+Excluded generated/vendor/audit material: node_modules, dist, coverage, security-audit-*
+Suite mode: Trail of Bits run-all (official JavaScript security-and-quality plus security-experimental suites)
+Third-party CodeQL packs: none installed; this limitation will be recorded
+Threat model: local (the project is a local CLI/MCP server and accepts local MCP tool inputs)
+Output: database, logs, suite, SARIF, database-quality report, and result summary under this directory
+Validation: require non-empty extracted source, verify suite resolves to queries, triage every alert for reachability and false positives
+Privacy: all analysis is local; no private source is uploaded

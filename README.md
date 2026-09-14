@@ -112,7 +112,9 @@ Requests already in flight may complete.
 IDs must come from your enrolled courses. There is no arbitrary URL-fetch tool and
 no submission, posting, grade-editing, or roster tool. Authenticated requests stay
 on `https://online.mun.ca`; redirects are not followed. Pagination is restricted to
-the original resource. API versions are discovered from the tenant.
+the original resource and has a 20 MiB cumulative raw-response budget. API versions
+are discovered from the tenant. At most four MCP tool calls run concurrently, with
+sixteen queued calls; document parsing is limited to two workers and four queued jobs.
 
 Results contain structured JSON and source URLs. API timestamps are preserved and
 also displayed in `America/St_Johns`, including daylight-saving changes. The
@@ -147,6 +149,10 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
   extracted text is capped at 2,000,000 characters and reports `truncated`.
 - Locked topics retain their navigation metadata and `locked: true`, but descriptions
   are suppressed and locked topics are excluded from material search.
+- Assignments, quizzes, announcements, modules, and topics are returned only when
+  Brightspace explicitly marks them visible (and published/active where applicable).
+  Assignment instructions and attachments remain unavailable before the assignment's
+  opening time. Missing visibility metadata fails closed as unavailable.
 - Authentication uses your browser session rather than a registered university
   OAuth application. When Brightspace authentication expires, the server opens a
   hidden browser once and tries MUN silent SSO with the encrypted saved state. It
@@ -171,10 +177,12 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
 | `PERMISSION_DENIED` | Check that the resource is available to your account in Brightspace |
 | `KEYRING_UNAVAILABLE` | Run under your normal Windows account with Credential Manager available |
 | `SESSION_UNREADABLE` | Run `npm run logout`, then `npm run login` |
+| `SESSION_BUSY` | Wait for the current login, renewal, or logout to finish, then retry |
 | `NETWORK_ERROR`, `SERVICE_UNAVAILABLE`, `RATE_LIMITED` | Retry later; the stored session is preserved |
 | `NOT_FOUND` | Re-list courses/content and verify the selected IDs |
 | `REDIRECT_BLOCKED`, `UNSUPPORTED_FILE` | Open the source material directly in Brightspace |
 | `RESPONSE_TOO_LARGE`, `RESPONSE_SIZE_UNKNOWN`, `RESPONSE_ENCODING_BLOCKED`, `OUTPUT_LIMIT`, `EXTRACTION_LIMIT`, `CONTENT_LIMIT` | Narrow the request or open the source directly in Brightspace |
+| `PAGINATION_LIMIT`, `RESOURCE_LIMIT` | Narrow the request or retry after current work finishes |
 | Browser executable missing | Run `npx playwright install chromium` |
 
 ## Development

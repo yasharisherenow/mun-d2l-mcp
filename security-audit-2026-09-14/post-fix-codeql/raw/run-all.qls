@@ -1,0 +1,15 @@
+- description: Run-all — the security-and-quality and security-experimental suites from all installed packs, not every query in them; see run-all-suite.md
+- import: codeql-suites/javascript-security-and-quality.qls
+  from: codeql/javascript-queries
+- import: codeql-suites/javascript-security-experimental.qls
+  from: codeql/javascript-queries
+- include:
+    kind:
+      - problem
+      - path-problem
+- exclude:
+    deprecated: //
+- exclude:
+    tags contain:
+      - modeleditor
+      - modelgenerator

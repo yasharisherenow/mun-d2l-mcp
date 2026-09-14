@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { BrightspaceClient, MAX_JSON_BYTES, MAX_PAGED_ITEMS, MAX_RESPONSE_BYTES, playwrightTransport, type HttpResponse } from '../src/api/client.js';
+import { BrightspaceClient, MAX_JSON_BYTES, MAX_PAGED_BYTES, MAX_PAGED_ITEMS, MAX_RESPONSE_BYTES, playwrightTransport, type HttpResponse } from '../src/api/client.js';
 
 const response = (value: unknown, status = 200, headers = {}): HttpResponse => ({ status, headers: { 'content-type': 'application/json', ...headers }, body: Buffer.from(JSON.stringify(value)) });
 describe('Brightspace client', () => {
@@ -86,5 +86,12 @@ describe('Brightspace client', () => {
   it('rejects aggregate pagination over the item budget', async () => {
     const values = Array.from({ length: MAX_PAGED_ITEMS + 1 }, (_, index) => index);
     await expect(new BrightspaceClient(vi.fn().mockResolvedValue(response(values))).paged('/d2l/api/test')).rejects.toMatchObject({ code: 'PAGINATION_LIMIT' });
+  });
+  it('rejects pagination before cumulative response bytes exceed the operation budget', async () => {
+    const chunk = 'x'.repeat(Math.floor(MAX_PAGED_BYTES / 5));
+    let page = 0;
+    const transport = vi.fn(async () => response({ Objects: [{ chunk }], Next: page++ < 5 ? `/d2l/api/test?bookmark=${page}` : null }));
+    await expect(new BrightspaceClient(transport).paged('/d2l/api/test')).rejects.toMatchObject({ code: 'PAGINATION_LIMIT' });
+    expect(transport).toHaveBeenCalledTimes(5);
   });
 });

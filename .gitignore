@@ -7,5 +7,15 @@ coverage/
 playwright-report/
 test-results/
 security-audit-*/isolated-install/
+security-audit-*/raw/
+security-audit-*/results/
+security-audit-*/semgrep/
+security-audit-*/supply-chain/
+security-audit-*/post-fix-codeql/database*/
+security-audit-*/post-fix-codeql/*.pid
+security-audit-*/post-fix-codeql/*.log
+security-audit-*/post-fix-codeql/*.sarif
+security-audit-*/post-fix-codeql/*wrapper*
+security-audit-*/post-fix-npm-audit.json
 *.tgz
 .DS_Store

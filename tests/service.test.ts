@@ -27,7 +27,7 @@ describe('study tools', () => {
     expect(result.category_summaries[0]?.name).toBe('Quizzes');
   });
   it('keeps missing dates and grades distinct from zero', async () => {
-    const { service: s } = service({ 'dropbox/folders/': [{ Id: 2, Name: 'Essay', DueDate: null }], 'grades/values/myGradeValues/': [{ GradeObjectIdentifier: '2', GradeObjectName: 'Essay', PointsNumerator: null }] });
+    const { service: s } = service({ 'dropbox/folders/': [{ Id: 2, Name: 'Essay', DueDate: null, IsHidden: false }], 'grades/values/myGradeValues/': [{ GradeObjectIdentifier: '2', GradeObjectName: 'Essay', PointsNumerator: null }] });
     expect((await s.listAssignments(1)).assignments[0]?.due).toBeNull();
     expect((await s.myGrades(1)).grades[0]?.points).toBeNull();
   });
@@ -39,15 +39,15 @@ describe('study tools', () => {
   });
   it('combines due and closing dates, excludes hidden quizzes, and respects exclusive end', async () => {
     const { service: s } = service({
-      'dropbox/folders/': [{ Id: 2, Name: 'Essay', DueDate: '2026-09-13T12:00:00Z' }, { Id: 3, Name: 'Next week', DueDate: '2026-09-19T00:00:00Z' }],
-      'quizzes/': { Objects: [{ QuizId: 4, Name: 'Quiz', EndDate: '2026-09-12T18:00:00Z', IsActive: true }, { QuizId: 5, Name: 'Hidden', DueDate: '2026-09-13T12:00:00Z', IsActive: false }], Next: null },
+      'dropbox/folders/': [{ Id: 2, Name: 'Essay', DueDate: '2026-09-13T12:00:00Z', IsHidden: false }, { Id: 3, Name: 'Next week', DueDate: '2026-09-19T00:00:00Z', IsHidden: false }],
+      'quizzes/': { Objects: [{ QuizId: 4, Name: 'Quiz', EndDate: '2026-09-12T18:00:00Z', IsHidden: false, IsActive: true }, { QuizId: 5, Name: 'Hidden', DueDate: '2026-09-13T12:00:00Z', IsHidden: true, IsActive: true }], Next: null },
     });
     const result = await s.deadlines([1], 7, '2026-09-12T00:00:00Z');
     expect(result.deadlines.map(d => d.kind)).toEqual(['quiz_closes', 'assignment_due']);
     expect(result.complete).toBe(true);
   });
   it('returns read-only quiz limits and availability metadata', async () => {
-    const { service: s } = service({ 'quizzes/': { Objects: [{ QuizId: 4, Name: 'Quiz 1', StartDate: '2026-09-12T12:00:00Z', DueDate: '2026-09-13T12:00:00Z', EndDate: '2026-09-14T12:00:00Z', IsActive: true, AttemptsAllowed: { IsUnlimited: false, NumberOfAttemptsAllowed: 2 }, SubmissionTimeLimit: { IsEnforced: true, TimeLimitValue: 45 } }], Next: null } });
+    const { service: s } = service({ 'quizzes/': { Objects: [{ QuizId: 4, Name: 'Quiz 1', StartDate: '2026-09-12T12:00:00Z', DueDate: '2026-09-13T12:00:00Z', EndDate: '2026-09-14T12:00:00Z', IsHidden: false, IsActive: true, AttemptsAllowed: { IsUnlimited: false, NumberOfAttemptsAllowed: 2 }, SubmissionTimeLimit: { IsEnforced: true, TimeLimitValue: 45 } }], Next: null } });
     const result = await s.listQuizzes(1);
     expect(result.quizzes[0]?.attempts).toEqual({ unlimited: false, allowed: 2 });
     expect(result.quizzes[0]?.time_limit).toEqual({ enforced: true, minutes: 45 });
@@ -61,7 +61,7 @@ describe('study tools', () => {
     expect(result.warning).toContain('not an official');
   });
   it('searches topic metadata with module paths without fetching unrelated topics', async () => {
-    const { service: s, transport } = service({ 'content/toc': { Modules: [{ ModuleId: 1, Title: 'Week 1', Modules: [], Topics: [{ TopicId: 2, Title: 'Database normalization notes', Description: { Text: 'First normal form' } }] }] } });
+    const { service: s, transport } = service({ 'content/toc': { Modules: [{ ModuleId: 1, Title: 'Week 1', IsHidden: false, Modules: [], Topics: [{ TopicId: 2, Title: 'Database normalization notes', IsHidden: false, Description: { Text: 'First normal form' } }] }] } });
     const result = await s.searchMaterials(1, 'normalization');
     expect(result.matches[0]?.module_path).toEqual(['Week 1']);
     expect(transport.mock.calls.some(([url]) => url.includes('/content/topics/2/file'))).toBe(false);
@@ -78,7 +78,7 @@ describe('study tools', () => {
     expect(transport.mock.calls.some(([url]) => url.includes('/999/'))).toBe(false);
   });
   it('does not read topics inside locked modules', async () => {
-    const { service: s } = service({ 'content/toc': { Modules: [{ ModuleId: 1, Title: 'Locked', IsLocked: true, Modules: [], Topics: [{ TopicId: 2, Title: 'Topic', Description: { Text: 'LOCKED SECRET' } }] }] } });
+    const { service: s } = service({ 'content/toc': { Modules: [{ ModuleId: 1, Title: 'Locked', IsHidden: false, IsLocked: true, Modules: [], Topics: [{ TopicId: 2, Title: 'Topic', IsHidden: false, Description: { Text: 'LOCKED SECRET' } }] }] } });
     const content = await s.content(1);
     expect(content.topics[0]?.description).toBeNull();
     expect(JSON.stringify(content)).not.toContain('LOCKED SECRET');
@@ -86,14 +86,14 @@ describe('study tools', () => {
     await expect(s.readMaterial({ course_id: 1, topic_id: 2 })).rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
   });
   it('rejects content trees deeper than the safety limit without recursive traversal', async () => {
-    let nested: unknown = { ModuleId: 60, Title: 'Deep', Modules: [], Topics: [] };
-    for (let index = 59; index > 0; index--) nested = { ModuleId: index, Title: `Level ${index}`, Modules: [nested], Topics: [] };
+    let nested: unknown = { ModuleId: 60, Title: 'Deep', IsHidden: false, Modules: [], Topics: [] };
+    for (let index = 59; index > 0; index--) nested = { ModuleId: index, Title: `Level ${index}`, IsHidden: false, Modules: [nested], Topics: [] };
     const { service: s } = service({ 'content/toc': { Modules: [nested] } });
     await expect(s.content(1)).rejects.toMatchObject({ code: 'CONTENT_LIMIT' });
   });
   it('pages readable material without losing the source', async () => {
     const { service: s } = service({
-      'content/toc': { Modules: [{ ModuleId: 1, Title: 'Module', Modules: [], Topics: [{ TopicId: 2, Title: 'Topic' }] }] },
+      'content/toc': { Modules: [{ ModuleId: 1, Title: 'Module', IsHidden: false, Modules: [], Topics: [{ TopicId: 2, Title: 'Topic', IsHidden: false }] }] },
       'content/topics/2/file': { status: 200, headers: { 'content-type': 'text/plain' }, body: Buffer.from('abcdefghij') },
     });
     const result = await s.readMaterial({ course_id: 1, topic_id: 2, offset: 2, max_characters: 3 });
@@ -102,8 +102,38 @@ describe('study tools', () => {
     expect(result.source_url).toContain('/viewContent/2/');
   });
   it('rejects ambiguous material IDs and unlisted attachments', async () => {
-    const { service: s } = service({ 'dropbox/folders/': [{ Id: 2, Name: 'Essay', Attachments: [] }] });
+    const { service: s } = service({ 'dropbox/folders/': [{ Id: 2, Name: 'Essay', IsHidden: false, Attachments: [] }] });
     await expect(s.readMaterial({ course_id: 1, topic_id: 2, assignment_id: 2 })).rejects.toMatchObject({ code: 'INVALID_INPUT' });
     await expect(s.readMaterial({ course_id: 1, assignment_id: 2, attachment_id: 3 })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+  it('fails closed when Brightspace visibility flags are missing', async () => {
+    const { service: s } = service({
+      'dropbox/folders/': [{ Id: 2, Name: 'Unknown visibility' }],
+      'quizzes/': { Objects: [{ QuizId: 3, Name: 'Unknown visibility' }], Next: null },
+      'news/': { Objects: [{ Id: 4, Title: 'Unknown visibility' }], Next: null },
+      'content/toc': { Modules: [{ ModuleId: 5, Title: 'Unknown visibility', Modules: [], Topics: [] }] },
+    });
+    expect((await s.listAssignments(1)).assignments).toEqual([]);
+    expect((await s.listQuizzes(1)).quizzes).toEqual([]);
+    expect((await s.announcements(1)).announcements).toEqual([]);
+    expect((await s.content(1)).modules).toEqual([]);
+  });
+  it('hides future assignment details and blocks future attachments', async () => {
+    const { service: s, transport } = service({ 'dropbox/folders/': [{
+      Id: 2, Name: 'Future assignment', IsHidden: false, CustomInstructions: { Text: 'SECRET' },
+      Availability: { StartDate: '2999-01-01T00:00:00Z' }, Attachments: [{ FileId: 3, FileName: 'future.pdf' }],
+      LinkAttachments: [{ LinkId: 4, LinkName: 'future', Href: 'https://example.com/future' }],
+    }] });
+    const assignment = (await s.listAssignments(1)).assignments[0]!;
+    expect(assignment).toMatchObject({ instructions: null, attachments: [], links: [] });
+    await expect(s.readMaterial({ course_id: 1, assignment_id: 2, attachment_id: 3 })).rejects.toMatchObject({ code: 'PERMISSION_DENIED' });
+    expect(transport.mock.calls.some(([url]) => url.includes('/attachments/3'))).toBe(false);
+  });
+  it('escapes standalone carriage returns in iCalendar values', async () => {
+    const { service: s } = service({});
+    vi.spyOn(s, 'weeklySchedule').mockResolvedValue({ events: [{ course_id: 1, id: 2, title: 'Title\rINJECT', starts: { original: '2026-09-14T12:00:00Z' }, source_url: 'https://online.mun.ca/d2l/home/1' }], complete: true } as never);
+    const result = await s.calendarIcs([1]);
+    expect(result.ics).toContain('SUMMARY:Title\\nINJECT');
+    expect(result.ics.replaceAll('\r\n', '')).not.toContain('\r');
   });
 });

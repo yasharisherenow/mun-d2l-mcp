@@ -55,3 +55,14 @@ it('never falls back to plaintext when the keyring fails', async () => {
   await expect(store.save(session)).rejects.toMatchObject({ code: 'KEYRING_UNAVAILABLE' });
   await expect(readFile(store.file)).rejects.toMatchObject({ code: 'ENOENT' });
 });
+it('serializes session lifecycle operations across store instances', async () => {
+  const { store, keys } = await fixture();
+  const second = new SessionStore(store.directory, keys);
+  let release!: () => void;
+  const held = store.withLifecycleLock(() => new Promise<void>(resolve => { release = resolve; }));
+  while (!release) await new Promise(resolve => setTimeout(resolve, 1));
+  await expect(second.withLifecycleLock(async () => undefined, 0)).rejects.toMatchObject({ code: 'SESSION_BUSY' });
+  release();
+  await held;
+  await expect(second.withLifecycleLock(async () => 'ok', 0)).resolves.toBe('ok');
+});

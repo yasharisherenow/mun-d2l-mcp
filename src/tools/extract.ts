@@ -1,5 +1,8 @@
 import { Worker } from 'node:worker_threads';
 import { AppError } from '../errors.js';
+import { BoundedSemaphore } from '../concurrency.js';
+
+const extractionSlots = new BoundedSemaphore(2, 4, 'Document extraction');
 
 export interface ExtractedDocument {
   text: string;
@@ -19,6 +22,10 @@ export async function extractDocument(body: Buffer, mime: string): Promise<Extra
   if (['text/html', 'application/xhtml+xml'].includes(mime) && /\/d2l\/login|<title>[^<]*login/i.test(body.toString('utf8', 0, Math.min(body.length, 100_000)))) {
     throw new AppError('AUTH_REQUIRED', 'Brightspace returned a login page. Run npm run login.');
   }
+  return extractionSlots.run(() => extractInWorker(body, mime));
+}
+
+async function extractInWorker(body: Buffer, mime: string): Promise<ExtractedDocument> {
   const worker = new Worker(new URL('./document-worker.js', import.meta.url), {
     execArgv: process.execArgv.filter(argument => !argument.startsWith('--input-type')),
     resourceLimits: { maxOldGenerationSizeMb: 128, maxYoungGenerationSizeMb: 32, stackSizeMb: 4 },

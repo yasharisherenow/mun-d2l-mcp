@@ -1,0 +1,23 @@
+{
+  "baseline": [
+    "p/security-audit",
+    "p/secrets",
+    "p/owasp-top-ten",
+    "p/cwe-top-25",
+    "p/insecure-transport",
+    "p/gitleaks"
+  ],
+  "typescript": [
+    "p/typescript",
+    "p/nodejs"
+  ],
+  "javascript": [
+    "p/javascript",
+    "p/nodejs"
+  ],
+  "third_party": [
+    "https://github.com/trailofbits/semgrep-rules",
+    "https://github.com/elttam/semgrep-rules",
+    "https://github.com/apiiro/malicious-code-ruleset"
+  ]
+}

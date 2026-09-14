@@ -54,6 +54,14 @@ export class StudyService {
   private enrollments?: z.infer<typeof enrollment>[];
   constructor(private readonly client: BrightspaceClient) {}
 
+  private assignmentOpen(item: z.infer<typeof assignment>) {
+    const value = item.Availability?.StartDate;
+    if (!value) return true;
+    const start = Date.parse(value);
+    if (!Number.isFinite(start)) throw new AppError('INVALID_RESPONSE', 'Brightspace returned an invalid assignment availability date.');
+    return start <= Date.now();
+  }
+
   private async allCourses() {
     this.enrollments ??= parse(z.array(enrollment), await this.client.courses());
     return this.enrollments;
@@ -70,14 +78,14 @@ export class StudyService {
   }
   private async folders(courseId: number) {
     await this.requireCourse(courseId);
-    return parse(z.array(assignment), await this.client.paged(await this.client.route('le', `${courseId}/dropbox/folders/`))).filter(item => !item.IsHidden);
+    return parse(z.array(assignment), await this.client.paged(await this.client.route('le', `${courseId}/dropbox/folders/`))).filter(item => item.IsHidden === false);
   }
   async listAssignments(courseId: number) {
     const folders = await this.folders(courseId);
     return { course_id: courseId, assignments: folders.map(item => ({
-      id: item.Id, name: item.Name, instructions: richText(item.CustomInstructions), due: timestamp(item.DueDate), opens: timestamp(item.Availability?.StartDate), closes: timestamp(item.Availability?.EndDate),
-      attachments: (item.Attachments ?? []).map(file => ({ id: file.FileId, name: file.FileName, size_bytes: file.Size ?? null })),
-      links: (item.LinkAttachments ?? []).map(link => ({ name: link.LinkName, url: publicLink(link.Href) })),
+      id: item.Id, name: item.Name, instructions: this.assignmentOpen(item) ? richText(item.CustomInstructions) : null, due: timestamp(item.DueDate), opens: timestamp(item.Availability?.StartDate), closes: timestamp(item.Availability?.EndDate),
+      attachments: this.assignmentOpen(item) ? (item.Attachments ?? []).map(file => ({ id: file.FileId, name: file.FileName, size_bytes: file.Size ?? null })) : [],
+      links: this.assignmentOpen(item) ? (item.LinkAttachments ?? []).map(link => ({ name: link.LinkName, url: publicLink(link.Href) })) : [],
       source_url: assignmentLink(courseId, item.Id),
     })), note: 'Missing due dates are unknown, not evidence that an assignment has no deadline. Submission status is not inferred.' };
   }
@@ -96,7 +104,7 @@ export class StudyService {
   async listQuizzes(courseId: number) {
     await this.requireCourse(courseId);
     const items = parse(z.array(quiz), await this.client.paged(await this.client.route('le', `${courseId}/quizzes/`)));
-    return { course_id: courseId, quizzes: items.filter(item => !item.IsHidden && item.IsActive !== false).map(item => ({
+    return { course_id: courseId, quizzes: items.filter(item => item.IsHidden === false && item.IsActive === true).map(item => ({
       id: item.QuizId, name: item.Name,
       instructions: item.Instructions?.IsDisplayed ? richText(item.Instructions.Text) : null,
       description: item.Description?.IsDisplayed ? richText(item.Description.Text) : null,
@@ -124,7 +132,7 @@ export class StudyService {
   async announcements(courseId: number) {
     await this.requireCourse(courseId);
     const items = parse(z.array(news), await this.client.paged(await this.client.route('le', `${courseId}/news/`)));
-    return { course_id: courseId, announcements: items.filter(item => !item.IsHidden && item.IsPublished !== false).map(item => ({ id: item.Id, title: item.Title, text: richText(item.Body), starts: timestamp(item.StartDate), ends: timestamp(item.EndDate), modified: timestamp(item.LastModifiedDate), source_url: `${BASE_URL}/d2l/le/news/${courseId}/${item.Id}/view` })) };
+    return { course_id: courseId, announcements: items.filter(item => item.IsHidden === false && item.IsPublished === true).map(item => ({ id: item.Id, title: item.Title, text: richText(item.Body), starts: timestamp(item.StartDate), ends: timestamp(item.EndDate), modified: timestamp(item.LastModifiedDate), source_url: `${BASE_URL}/d2l/le/news/${courseId}/${item.Id}/view` })) };
   }
   private async toc(courseId: number) {
     await this.requireCourse(courseId);
@@ -140,11 +148,11 @@ export class StudyService {
       const current = stack.pop()!;
       if (current.depth > 50 || ++nodes > 10_000) throw new AppError('CONTENT_LIMIT', 'Course content exceeds the safe module depth or item limit.');
       const module = parse(moduleSchema, current.value);
-      if (module.IsHidden) continue;
+      if (module.IsHidden !== false) continue;
       const path = [...current.parents, module.Title];
       const locked = current.parentLocked || !!module.IsLocked;
       modules.push({ id: module.ModuleId, title: module.Title, module_path: current.parents, locked });
-      for (const item of module.Topics) if (!item.IsHidden) {
+      for (const item of module.Topics) if (item.IsHidden === false) {
         if (++nodes > 10_000) throw new AppError('CONTENT_LIMIT', 'Course content exceeds the safe module depth or item limit.');
         const topicLocked = locked || !!item.IsLocked;
         topics.push({ id: item.TopicId, title: item.Title, module_path: path, locked: topicLocked, description: topicLocked ? null : richText(item.Description), source_url: topicLink(courseId, item.TopicId) });
@@ -175,7 +183,7 @@ export class StudyService {
             }
           } else {
             const quizzes = parse(z.array(quiz), await this.client.paged(await this.client.route('le', `${courseId}/quizzes/`)));
-            for (const item of quizzes.filter(item => !item.IsHidden && item.IsActive !== false)) add(item.QuizId, item.Name, item.DueDate ?? item.EndDate, item.DueDate ? 'quiz_due' : 'quiz_closes', `${BASE_URL}/d2l/lms/quizzing/user/quiz_summary.d2l?qi=${item.QuizId}&ou=${courseId}`);
+            for (const item of quizzes.filter(item => item.IsHidden === false && item.IsActive === true)) add(item.QuizId, item.Name, item.DueDate ?? item.EndDate, item.DueDate ? 'quiz_due' : 'quiz_closes', `${BASE_URL}/d2l/lms/quizzing/user/quiz_summary.d2l?qi=${item.QuizId}&ou=${courseId}`);
           }
         } catch (error) {
           if (error instanceof AppError && ['AUTH_REQUIRED', 'NETWORK_ERROR', 'RATE_LIMITED', 'SERVICE_UNAVAILABLE'].includes(error.code)) throw error;
@@ -215,7 +223,9 @@ export class StudyService {
       source = item.source_url;
     } else if (assignmentId !== undefined && attachmentId !== undefined && topicId === undefined) {
       const folder = (await this.folders(courseId)).find(item => item.Id === assignmentId);
-      if (!folder?.Attachments?.some(file => file.FileId === attachmentId)) throw new AppError('NOT_FOUND', 'Attachment is not listed on this assignment.');
+      if (!folder) throw new AppError('NOT_FOUND', 'Assignment was not found.');
+      if (!this.assignmentOpen(folder)) throw new AppError('PERMISSION_DENIED', 'This assignment attachment is not available yet.');
+      if (!folder.Attachments?.some(file => file.FileId === attachmentId)) throw new AppError('NOT_FOUND', 'Attachment is not listed on this assignment.');
       path = await this.client.route('le', `${courseId}/dropbox/folders/${assignmentId}/attachments/${attachmentId}`);
       source = assignmentLink(courseId, assignmentId);
     } else throw new AppError('INVALID_INPUT', 'Provide topic_id OR both assignment_id and attachment_id.');
@@ -258,7 +268,7 @@ export class StudyService {
   async calendarIcs(courseIds?: number[], days = 30, from = new Date().toISOString()) {
     const schedule = await this.weeklySchedule(courseIds, days, from);
     const events = schedule.events as Array<Record<string, unknown>>;
-    const esc = (value: unknown) => String(value ?? '').replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    const esc = (value: unknown) => String(value ?? '').replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
     const utc = (value: unknown) => { const original = (value as { original?: string } | null)?.original; if (!original) return null; const date = new Date(original); return Number.isFinite(date.getTime()) ? date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z') : null; };
     const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
     const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//mun-d2l-mcp//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];

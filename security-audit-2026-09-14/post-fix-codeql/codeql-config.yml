@@ -1,0 +1,6 @@
+name: mun-d2l-mcp-local-audit
+paths-ignore:
+  - node_modules/**
+  - dist/**
+  - coverage/**
+  - security-audit-*/**

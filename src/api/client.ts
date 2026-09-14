@@ -7,6 +7,7 @@ export interface HttpResponse { status: number; headers: Record<string, string>;
 export type Transport = (url: string, headers: Record<string, string>) => Promise<HttpResponse>;
 export const MAX_RESPONSE_BYTES = 20 * 1024 * 1024;
 export const MAX_JSON_BYTES = 5 * 1024 * 1024;
+export const MAX_PAGED_BYTES = 20 * 1024 * 1024;
 export const MAX_PAGED_ITEMS = 10_000;
 export const playwrightTransport = (context: APIRequestContext): Transport => async (url, headers) => {
   const response = await context.get(url, { headers: { ...headers, 'Accept-Encoding': 'identity' }, maxRedirects: 0, timeout: 20_000, failOnStatusCode: false });
@@ -64,8 +65,7 @@ export class BrightspaceClient {
     throw new AppError('API_ERROR', 'Request did not complete.');
   }
 
-  async json(path: string): Promise<unknown> {
-    const response = await this.get(path);
+  private parseJson(response: HttpResponse): unknown {
     if (response.body.length > MAX_JSON_BYTES) throw new AppError('RESPONSE_TOO_LARGE', 'Brightspace returned too much JSON data for one response.');
     if (!/json/i.test(response.headers['content-type'] ?? '')) {
       if (/login|not authenticated|sessionExpired/i.test(response.body.toString('utf8'))) throw new AppError('AUTH_REQUIRED', 'Brightspace requires sign-in. Run npm run login in the project folder.');
@@ -73,6 +73,10 @@ export class BrightspaceClient {
     }
     try { return JSON.parse(response.body.toString('utf8')); }
     catch { throw new AppError('INVALID_RESPONSE', 'Brightspace returned invalid JSON.'); }
+  }
+
+  async json(path: string): Promise<unknown> {
+    return this.parseJson(await this.get(path));
   }
 
   async route(product: 'lp' | 'le', suffix: string): Promise<string> {
@@ -94,9 +98,13 @@ export class BrightspaceClient {
   async paged(path: string): Promise<unknown[]> {
     const items: unknown[] = [];
     const seen = new Set<string>();
+    let acceptedBytes = 0;
     let current = path;
     for (let page = 0; page < 100; page++) {
-      const value = await this.json(current);
+      const response = await this.get(current);
+      if (acceptedBytes + response.body.length > MAX_PAGED_BYTES) throw new AppError('PAGINATION_LIMIT', 'Brightspace pagination exceeded the cumulative response byte limit. Narrow the request and try again.');
+      acceptedBytes += response.body.length;
+      const value = this.parseJson(response);
       if (Array.isArray(value)) {
         if (items.length + value.length > MAX_PAGED_ITEMS) throw new AppError('PAGINATION_LIMIT', 'Brightspace returned too many items for one operation.');
         return [...items, ...value];

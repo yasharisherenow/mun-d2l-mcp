@@ -1,0 +1,175 @@
+{
+  "count": 17,
+  "results": [
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 55
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 60
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 64
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 64
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 65
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 84
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 103
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 106
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 113
+        }
+      ]
+    },
+    {
+      "ruleId": "js/path-injection",
+      "message": "This path depends on a [user-provided value](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 137
+        }
+      ]
+    },
+    {
+      "ruleId": "js/untrusted-data-to-external-api-more-sources",
+      "message": "Call to crypto.createCipheriv() \\[param 1\\] with untrusted data from [this.ke ... sword()](1).\nCall to node:crypto.createCipheriv() \\[param 1\\] with untrusted data from [this.ke ... sword()](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "ruleId": "js/untrusted-data-to-external-api-more-sources",
+      "message": "Call to crypto.createDecipheriv() \\[param 1\\] with untrusted data from [this.ke ... sword()](1).\nCall to node:crypto.createDecipheriv() \\[param 1\\] with untrusted data from [this.ke ... sword()](1).",
+      "locations": [
+        {
+          "uri": "src/auth/store.ts",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "ruleId": "js/untrusted-data-to-external-api-more-sources",
+      "message": "Call to vitest.expect() \\[param 0\\] with untrusted data from [keys.getPassword()](1).",
+      "locations": [
+        {
+          "uri": "tests/store.test.ts",
+          "line": 49
+        }
+      ]
+    }
+  ]
+}
