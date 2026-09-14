@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">MUN D2L MCP architecture</title>
+  <desc id="desc">Codex calls a local read-only MCP server, which validates requests and retrieves authorized data from MUN Brightspace while encrypted session data remains on the Windows computer.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#52606d"/></marker>
+    <style>
+      .title{font:700 30px system-ui,sans-serif;fill:#102a43}.subtitle{font:16px system-ui,sans-serif;fill:#486581}.label{font:700 18px system-ui,sans-serif;fill:#102a43}.body{font:14px system-ui,sans-serif;fill:#334e68}.small{font:13px system-ui,sans-serif;fill:#486581}.zone{fill:#f7fafc;stroke:#bcccdc;stroke-width:2}.client{fill:#e6f0ff;stroke:#3973c4;stroke-width:2}.process{fill:#e8f7ef;stroke:#25855a;stroke-width:2}.store{fill:#fff4df;stroke:#c77d10;stroke-width:2}.external{fill:#f3edff;stroke:#7451b9;stroke-width:2}.line{fill:none;stroke:#52606d;stroke-width:3;marker-end:url(#arrow)}.dash{fill:none;stroke:#829ab1;stroke-width:2;stroke-dasharray:7 7;marker-end:url(#arrow)}
+    </style>
+  </defs>
+  <rect width="1200" height="680" rx="24" fill="#ffffff"/>
+  <text x="60" y="62" class="title">How MUN D2L MCP works</text>
+  <text x="60" y="91" class="subtitle">A private, read-only bridge between your AI client and Brightspace</text>
+
+  <rect x="40" y="126" width="1120" height="322" rx="22" class="zone"/>
+
+  <!-- Connectors are drawn first so they remain behind the nodes. -->
+  <path class="line" d="M270 254 H390"/>
+  <path class="line" d="M810 254 H930"/>
+  <path class="dash" d="M600 398 V500"/>
+  <text x="292" y="235" class="small">MCP over stdio</text>
+  <text x="842" y="235" class="small">HTTPS only</text>
+  <text x="620" y="458" class="small">encrypted locally</text>
+
+  <text x="66" y="158" class="small">YOUR COMPUTER</text>
+
+  <rect x="70" y="190" width="200" height="130" rx="18" class="client"/>
+  <circle cx="115" cy="232" r="20" fill="#3973c4"/>
+  <path d="M105 232h20M115 222v20" stroke="#fff" stroke-width="3"/>
+  <text x="145" y="228" class="label">Codex</text>
+  <text x="95" y="274" class="body">Asks for courses,</text>
+  <text x="95" y="296" class="body">deadlines, or grades</text>
+
+  <rect x="390" y="174" width="420" height="224" rx="20" class="process"/>
+  <text x="426" y="214" class="label">Local TypeScript MCP server</text>
+  <rect x="426" y="238" width="154" height="58" rx="12" fill="#fff" stroke="#8bc7aa"/>
+  <text x="446" y="263" class="body">Zod validation</text><text x="446" y="283" class="small">typed tool inputs</text>
+  <rect x="620" y="238" width="154" height="58" rx="12" fill="#fff" stroke="#8bc7aa"/>
+  <text x="639" y="263" class="body">Safety bounds</text><text x="639" y="283" class="small">size + concurrency</text>
+  <rect x="426" y="318" width="154" height="58" rx="12" fill="#fff" stroke="#8bc7aa"/>
+  <text x="445" y="343" class="body">Read-only tools</text><text x="445" y="363" class="small">no submissions</text>
+  <rect x="620" y="318" width="154" height="58" rx="12" fill="#fff" stroke="#8bc7aa"/>
+  <text x="639" y="343" class="body">Origin guard</text><text x="639" y="363" class="small">online.mun.ca only</text>
+
+  <rect x="930" y="190" width="200" height="130" rx="18" class="external"/>
+  <path d="M974 229h40v34h-40zM980 229v-10h28v10" fill="none" stroke="#7451b9" stroke-width="3"/>
+  <text x="1025" y="234" class="label">MUN D2L</text>
+  <text x="955" y="276" class="body">Brightspace APIs</text>
+  <text x="955" y="298" class="body">authorized for you</text>
+
+  <rect x="390" y="500" width="420" height="120" rx="18" class="store"/>
+  <path d="M432 546a18 18 0 0 1 36 0v10h8v34h-52v-34h8zM442 546v10h16v-10a8 8 0 0 0-16 0z" fill="#c77d10"/>
+  <text x="500" y="544" class="label">Protected local session</text>
+  <text x="500" y="570" class="body">AES-256-GCM encrypted file outside the repository</text>
+  <text x="500" y="594" class="body">Key stored in Windows Credential Manager</text>
+
+  <text x="60" y="654" class="small">Course content returns to the connected MCP client and is not written into this repository.</text>
+</svg>

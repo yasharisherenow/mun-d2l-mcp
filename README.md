@@ -4,6 +4,14 @@ Your own local, read-only Brightspace MCP server for Memorial University.
 Written independently in TypeScript; not a fork of another Brightspace MCP project.
 The project is private and is not published to npm.
 
+![MUN D2L MCP architecture](docs/assets/architecture.png)
+
+The MCP server runs on your Windows computer and communicates with Codex over
+standard input/output. Only its guarded Brightspace client sends authenticated HTTPS
+requests, and saved authentication stays encrypted outside the repository.
+
+![Secure MUN D2L authentication lifecycle](docs/assets/authentication-flow.png)
+
 ## Setup on Windows
 
 Requires Node.js 22 or newer and Windows Credential Manager.

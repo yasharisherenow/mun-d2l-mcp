@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Secure MUN D2L authentication lifecycle</title>
+  <desc id="desc">The user logs in through a visible MUN browser, the server validates identity and courses, encrypts the session locally, reuses it, attempts silent renewal, and requests interactive login only when MUN requires it.</desc>
+  <defs>
+    <marker id="arrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#52606d"/></marker>
+    <style>
+      .title{font:700 30px system-ui,sans-serif;fill:#102a43}.subtitle{font:16px system-ui,sans-serif;fill:#486581}.head{font:700 17px system-ui,sans-serif;fill:#102a43}.body{font:14px system-ui,sans-serif;fill:#334e68}.step{font:700 15px system-ui,sans-serif;fill:#fff}.line{fill:none;stroke:#52606d;stroke-width:3;marker-end:url(#arrow2)}.yes{font:700 13px system-ui,sans-serif;fill:#16794f}.no{font:700 13px system-ui,sans-serif;fill:#b44b3e}.blue{fill:#e6f0ff;stroke:#3973c4;stroke-width:2}.green{fill:#e8f7ef;stroke:#25855a;stroke-width:2}.amber{fill:#fff4df;stroke:#c77d10;stroke-width:2}.purple{fill:#f3edff;stroke:#7451b9;stroke-width:2}.red{fill:#fff0ee;stroke:#c95d4b;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1200" height="720" rx="24" fill="#fff"/>
+  <text x="60" y="60" class="title">Secure session lifecycle</text>
+  <text x="60" y="89" class="subtitle">Your password and MFA stay inside MUN’s login page</text>
+
+  <!-- Connectors -->
+  <path class="line" d="M250 203 H340"/><path class="line" d="M560 203 H650"/><path class="line" d="M870 203 H960"/>
+  <path class="line" d="M1065 270 V364 H820"/><path class="line" d="M710 430 H570"/>
+  <path class="line" d="M350 430 H230 V535"/><path class="line" d="M460 496 V568"/>
+  <path class="line" d="M570 601 H820 V496"/><path class="line" d="M930 430 H1065 V298"/>
+  <text x="845" y="414" class="yes">valid</text><text x="585" y="414" class="no">expired</text>
+  <text x="595" y="585" class="yes">SSO works</text><text x="250" y="520" class="no">MFA required</text>
+
+  <circle cx="105" cy="203" r="28" fill="#3973c4"/><text x="100" y="209" class="step">1</text>
+  <rect x="135" y="150" width="115" height="106" rx="16" class="blue"/>
+  <text x="158" y="188" class="head">Run login</text><text x="157" y="215" class="body">Visible browser</text><text x="157" y="236" class="body">opens locally</text>
+
+  <circle cx="315" cy="203" r="28" fill="#7451b9"/><text x="310" y="209" class="step">2</text>
+  <rect x="340" y="138" width="220" height="130" rx="16" class="purple"/>
+  <text x="368" y="179" class="head">Complete MUN Login</text><text x="368" y="207" class="body">You enter credentials</text><text x="368" y="229" class="body">and approve MFA directly</text><text x="368" y="251" class="body">with the university</text>
+
+  <circle cx="625" cy="203" r="28" fill="#25855a"/><text x="620" y="209" class="step">3</text>
+  <rect x="650" y="138" width="220" height="130" rx="16" class="green"/>
+  <text x="680" y="179" class="head">Validate access</text><text x="680" y="207" class="body">Retrieve identity</text><text x="680" y="229" class="body">and enrolled courses</text><text x="680" y="251" class="body">before saving anything</text>
+
+  <circle cx="935" cy="203" r="28" fill="#c77d10"/><text x="930" y="209" class="step">4</text>
+  <rect x="960" y="138" width="190" height="130" rx="16" class="amber"/>
+  <text x="988" y="179" class="head">Encrypt session</text><text x="988" y="207" class="body">Cookies encrypted</text><text x="988" y="229" class="body">with an OS-held key</text><text x="988" y="251" class="body">Password never saved</text>
+
+  <rect x="710" y="364" width="220" height="132" rx="16" class="green"/>
+  <text x="746" y="405" class="head">Reuse local session</text><text x="746" y="433" class="body">Serve read-only tools</text><text x="746" y="455" class="body">and check session age</text><text x="746" y="477" class="body">on each request</text>
+
+  <rect x="350" y="364" width="220" height="132" rx="16" class="blue"/>
+  <text x="386" y="405" class="head">Silent renewal</text><text x="386" y="433" class="body">Hidden browser tries</text><text x="386" y="455" class="body">existing MUN SSO once</text><text x="386" y="477" class="body">without entering secrets</text>
+
+  <rect x="350" y="568" width="220" height="106" rx="16" class="red"/>
+  <text x="390" y="609" class="head">Interactive login</text><text x="390" y="637" class="body">Opened only when MUN</text><text x="390" y="659" class="body">requires you or MFA</text>
+
+  <rect x="92" y="535" width="138" height="106" rx="16" class="amber"/>
+  <text x="121" y="576" class="head">Old session</text><text x="121" y="604" class="body">is preserved on</text><text x="121" y="626" class="body">network failure</text>
+
+  <text x="60" y="696" class="body">Logout deletes this app’s encrypted session and Credential Manager key; it does not change your MUN password.</text>
+</svg>
