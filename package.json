@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "packageManager": "npm@11.13.0",
   "private": true,
+  "license": "Apache-2.0",
   "files": [
     "dist/",
     "README.md",
-    "SECURITY.md"
+    "SECURITY.md",
+    "LICENSE"
   ],
   "description": "An independent, local, read-only MUN Brightspace MCP server",
   "type": "module",
