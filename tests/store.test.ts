@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, expect, it } from 'vitest';
+import path, { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import { SessionStore, type KeyStore, type Session } from '../src/auth/store.js';
 import { BASE_URL } from '../src/config.js';
 
@@ -65,4 +65,66 @@ it('serializes session lifecycle operations across store instances', async () =>
   release();
   await held;
   await expect(second.withLifecycleLock(async () => 'ok', 0)).resolves.toBe('ok');
+});
+
+describe('path traversal protection', () => {
+  it('ensures session files stay within the specified directory', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'mun-d2l-test-'));
+    directories.push(directory);
+    const keys: KeyStore = { getPassword: () => undefined, setPassword: () => {}, deletePassword: () => {} };
+    
+    // Valid directory should create files within it
+    const store = new SessionStore(directory, keys);
+    
+    // Verify files are within the directory using path resolution
+    const resolvedDir = path.resolve(directory);
+    const resolvedFile = path.resolve(store.file);
+    const resolvedLock = path.resolve(store.lockFile);
+    
+    expect(resolvedFile.startsWith(resolvedDir + path.sep)).toBe(true);
+    expect(resolvedLock.startsWith(resolvedDir + path.sep)).toBe(true);
+  });
+
+  it('prevents file paths from escaping the base directory', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'mun-d2l-test-'));
+    directories.push(directory);
+    const keys: KeyStore = { getPassword: () => undefined, setPassword: () => {}, deletePassword: () => {} };
+    
+    const store = new SessionStore(directory, keys);
+    
+    // Verify the resolved paths don't escape the base directory
+    const normalizedBase = path.resolve(directory);
+    const normalizedFile = path.resolve(store.file);
+    const normalizedLock = path.resolve(store.lockFile);
+    
+    // Both files should be within the base directory
+    expect(normalizedFile.startsWith(normalizedBase)).toBe(true);
+    expect(normalizedLock.startsWith(normalizedBase)).toBe(true);
+    
+    // Relative paths should not start with '..'
+    expect(path.relative(normalizedBase, normalizedFile).startsWith('..')).toBe(false);
+    expect(path.relative(normalizedBase, normalizedLock).startsWith('..')).toBe(false);
+  });
+
+  it('validates that hardcoded filenames cannot be manipulated to escape', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'mun-d2l-test-'));
+    directories.push(directory);
+    const keys: KeyStore = { getPassword: () => undefined, setPassword: () => {}, deletePassword: () => {} };
+    
+    // The implementation uses hardcoded filenames 'session.encrypted.json' and 'session.lock'
+    // This test verifies they are properly constrained within the directory
+    const store = new SessionStore(directory, keys);
+    
+    // Extract just the filename from the full path
+    const fileName = path.basename(store.file);
+    const lockName = path.basename(store.lockFile);
+    
+    // Verify the filenames are exactly what we expect (no path traversal injected)
+    expect(fileName).toBe('session.encrypted.json');
+    expect(lockName).toBe('session.lock');
+    
+    // Verify the parent directory is the one we specified
+    expect(path.dirname(store.file)).toBe(path.resolve(directory));
+    expect(path.dirname(store.lockFile)).toBe(path.resolve(directory));
+  });
 });
