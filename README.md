@@ -8,7 +8,7 @@
 - **Windows-only**: Requires Windows 10 or newer and Windows Credential Manager. Does not run on macOS or Linux.
 - **Read-only**: Provides access to course content, grades, and assignments. Does not support submissions, posting, or any write operations.
 
-![MUN D2L MCP architecture](docs/assets/architecture.png)
+![MUN D2L MCP architecture](docs/assets/architecture.svg)
 
 The MCP server runs on your Windows computer and communicates with MCP clients over
 standard input/output. Only its guarded Brightspace client sends authenticated HTTPS
@@ -18,7 +18,9 @@ Use it with Codex, Claude Code, Cursor, VS Code/Copilot, Gemini CLI, or another
 client that launches local stdio MCP servers. See the
 [multi-client setup guide](docs/mcp-clients.md) for configuration and verification.
 
-![Secure MUN D2L authentication lifecycle](docs/assets/authentication-flow.png)
+![Secure MUN D2L authentication lifecycle](docs/assets/authentication-flow.svg)
+
+[Edit these Mermaid diagrams in draw.io](docs/diagrams.md).
 
 ## Setup on Windows
 

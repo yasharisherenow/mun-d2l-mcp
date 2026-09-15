@@ -1,0 +1,11 @@
+{
+  "theme": "base",
+  "fontFamily": "Arial, sans-serif",
+  "flowchart": {
+    "htmlLabels": false,
+    "curve": "linear",
+    "nodeSpacing": 40,
+    "rankSpacing": 55,
+    "padding": 20
+  }
+}

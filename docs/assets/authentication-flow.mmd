@@ -1,0 +1,27 @@
+flowchart TB
+    LOGIN["Run npm run login<br/>A visible browser opens locally"]
+    MUN["Complete MUN sign-in and MFA<br/>Credentials stay on the university login page"]
+    VERIFY["Verify identity and enrollments<br/>Save only after successful verification"]
+    SAVE[("Save encrypted session<br/>AES-256-GCM file + Windows-held key")]
+    USE["On each tool request<br/>Load saved session and check its age"]
+    READ["Verify access and serve read-only tools"]
+    RENEW["Try silent renewal once<br/>Hidden browser uses existing MUN SSO"]
+    REQUIRED["Return AUTH_REQUIRED<br/>Run npm run login to sign in again"]
+    FAILURE["Return the failure<br/>Keep the previous saved session"]
+
+    LOGIN --> MUN --> VERIFY --> SAVE --> USE
+    USE -->|"Renewal not due"| READ
+    USE -->|"Renewal due"| RENEW
+    READ -->|"Session rejected during access check"| RENEW
+    RENEW -->|"SSO and verification succeed"| SAVE
+    RENEW -->|"Sign-in or MFA required"| REQUIRED
+    RENEW -->|"Network or service failure"| FAILURE
+
+    classDef action fill:#e8f0fe,stroke:#3573c5,color:#16324f
+    classDef process fill:#e8f5ee,stroke:#21865c,color:#16324f
+    classDef storage fill:#fff4df,stroke:#bd7a13,color:#16324f
+    classDef attention fill:#fff0ed,stroke:#c45e48,color:#16324f
+    class LOGIN,MUN,RENEW action
+    class VERIFY,USE,READ process
+    class SAVE storage
+    class REQUIRED,FAILURE attention

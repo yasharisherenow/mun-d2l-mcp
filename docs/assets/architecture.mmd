@@ -1,0 +1,23 @@
+flowchart TB
+    subgraph PC["Your Windows computer"]
+        CLIENT["AI client<br/>Codex · Claude Code · Cursor<br/>VS Code / Copilot · Gemini CLI"]
+        SERVER["Local TypeScript MCP server<br/>12 read-only study tools<br/>Input validation · size and concurrency limits"]
+        GUARD["Guarded Brightspace client<br/>online.mun.ca only<br/>Authenticated HTTPS · no redirects"]
+        SESSION[("Encrypted local session<br/>AES-256-GCM · outside the repository")]
+        KEY["Windows Credential Manager<br/>Stores the encryption key"]
+        CLIENT <-->|"MCP over stdio"| SERVER
+        SERVER --> GUARD
+        GUARD -.->|"Loads saved authentication"| SESSION
+        KEY -.->|"Protects"| SESSION
+    end
+    D2L["MUN Brightspace<br/>online.mun.ca<br/>Only data your account can access"]
+    GUARD <-->|"Read-only HTTPS requests and results"| D2L
+
+    classDef client fill:#e8f0fe,stroke:#3573c5,color:#16324f
+    classDef process fill:#e8f5ee,stroke:#21865c,color:#16324f
+    classDef storage fill:#fff4df,stroke:#bd7a13,color:#16324f
+    classDef external fill:#f1ebfc,stroke:#8054c4,color:#16324f
+    class CLIENT client
+    class SERVER,GUARD process
+    class SESSION,KEY storage
+    class D2L external
