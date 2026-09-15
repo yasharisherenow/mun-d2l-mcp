@@ -237,6 +237,12 @@ study data transformations; `src/server.ts` registers the twelve MCP tools.
 Tests use synthetic data and do not require a MUN account. Live smoke tests require
 an existing login and print counts rather than course content or credentials.
 
+## License
+
+This project is licensed under the [Apache License, Version 2.0](LICENSE).
+It is private and not published to npm, but the license applies to the source
+code and documentation in this repository.
+
 References used to design the integration:
 
 - [Brightspace developer documentation](https://docs.valence.desire2learn.com/)
