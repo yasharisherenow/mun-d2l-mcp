@@ -1,6 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { mkdir, open, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import path, { join } from 'node:path';
 import { Entry } from '@napi-rs/keyring';
 import type { BrowserContext } from 'playwright';
 import { z } from 'zod';
@@ -42,8 +42,19 @@ export class SessionStore {
     readonly directory = sessionDirectory(),
     private readonly keys: KeyStore = new Entry('mun-d2l-mcp', BASE_URL),
   ) {
-    this.file = join(directory, 'session.encrypted.json');
-    this.lockFile = join(directory, 'session.lock');
+    const resolvedBase = path.resolve(directory);
+    const resolvedFile = path.resolve(resolvedBase, 'session.encrypted.json');
+    const relativeFile = path.relative(resolvedBase, resolvedFile);
+    if (relativeFile.startsWith('..') || path.isAbsolute(relativeFile)) {
+      throw new Error('Invalid file path');
+    }
+    this.file = resolvedFile;
+    const resolvedLock = path.resolve(resolvedBase, 'session.lock');
+    const relativeLock = path.relative(resolvedBase, resolvedLock);
+    if (relativeLock.startsWith('..') || path.isAbsolute(relativeLock)) {
+      throw new Error('Invalid file path');
+    }
+    this.lockFile = resolvedLock;
   }
 
   async withLifecycleLock<T>(action: () => Promise<T>, timeoutMs = 11 * 60_000): Promise<T> {
