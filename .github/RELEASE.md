@@ -10,6 +10,7 @@ Before creating a release tag, verify:
 
 ```powershell
 npm ci              # Clean install
+npm run typecheck   # TypeScript check without output
 npm run build       # TypeScript compilation
 npm test            # Unit tests pass
 npm run security:audit  # No high/critical vulnerabilities
@@ -56,11 +57,11 @@ Ensure `.gitignore` covers:
 
 ### 5. GitHub Actions verification
 
-All CI/CD workflows must pass:
+All CI/CD checks must pass:
 
-- [ ] **Build** workflow passes (npm run build succeeds)
-- [ ] **Test** workflow passes (npm test + npm run security:audit succeed)
-- [ ] **Smoke Test** workflow passes (MCP handshake validated)
+- [ ] **CI and security / test (Node 22)** passes typecheck, build, tests, smoke, and audit
+- [ ] **CI and security / test (Node 24)** passes typecheck, build, tests, smoke, and audit
+- [ ] Secret scan, dependency review (for pull requests), Semgrep, and CodeQL pass
 - [ ] No pending branch protection violations
 
 ### 6. Security review

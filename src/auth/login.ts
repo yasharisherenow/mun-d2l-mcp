@@ -1,105 +1,156 @@
 import { chromium, request } from 'playwright';
+import { resolve } from 'node:path';
 import { BASE_URL, sessionHours } from '../config.js';
 import { AppError } from '../errors.js';
 import { BrightspaceClient, playwrightTransport } from '../api/client.js';
 import { SessionStore, type Session } from './store.js';
+import { AuthDeadline, AUTH_BUDGET_MS, RENEW_BUDGET_MS, SESSION_LOCK_WAIT_MS } from './deadline.js';
 
 const AUTH_ERRORS = ['AUTH_REQUIRED', 'PERMISSION_DENIED'];
 const allowedCookie = (domain: string) => ['online.mun.ca', 'login.mun.ca'].includes(domain.replace(/^\./, '').toLowerCase());
-let refreshInProgress: Promise<void> | undefined;
+const isAuthError = (error: unknown) => error instanceof AppError && AUTH_ERRORS.includes(error.code);
+const closeQuietly = async (close: () => Promise<unknown>) => { try { await close(); } catch { /* Preserve the original error. */ } };
 
-async function verifiedClient(session: Session) {
-  const context = await request.newContext({ storageState: session.state });
-  try {
-    let client = new BrightspaceClient(playwrightTransport(context));
-    try { await client.identity(); }
-    catch (error) {
-      if (!session.bearer || !(error instanceof AppError) || !AUTH_ERRORS.includes(error.code)) throw error;
-      client = new BrightspaceClient(playwrightTransport(context), session.bearer);
-      await client.identity();
-    }
-    return { client, context };
-  } catch (error) {
-    await context.dispose();
-    throw error;
-  }
+async function loadSession(store: SessionStore, deadline: AuthDeadline) {
+  const session = await deadline.run(() => store.load());
+  if (!session) throw new AppError('AUTH_REQUIRED', 'No saved session. Run npm run login in the project folder.');
+  return session;
 }
 
-/** Try MUN's existing SSO cookies in a hidden browser; never enters credentials or triggers MFA intentionally. */
-async function refreshSessionUnlocked(store: SessionStore): Promise<void> {
-  const existing = await store.load();
-  if (!existing) throw new AppError('AUTH_REQUIRED', 'No saved session. Run npm run login in the project folder.');
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({ storageState: existing.state });
-  const page = await context.newPage();
-  let bearer: string | undefined;
-  page.on('request', request => {
-    const url = new URL(request.url());
-    const authorization = request.headers().authorization;
-    if (url.origin === BASE_URL && url.pathname.startsWith('/d2l/') && authorization?.startsWith('Bearer ')) bearer = authorization.slice(7);
-  });
+async function verifiedClient(session: Session, deadline: AuthDeadline) {
+  const context = await deadline.run(() => request.newContext({ storageState: session.state }), c => c.dispose());
+  const detach = deadline.onCancel(() => { void closeQuietly(() => context.dispose()); });
   try {
-    await page.goto(`${BASE_URL}/d2l/home`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    let bearer: string | undefined;
+    let client = new BrightspaceClient(playwrightTransport(context, deadline), bearer, deadline.sleep);
+    try { await deadline.run(() => client.identity()); }
+    catch (error) {
+      if (!session.bearer || !isAuthError(error)) throw error;
+      bearer = session.bearer;
+      client = new BrightspaceClient(playwrightTransport(context, deadline), bearer, deadline.sleep);
+      await deadline.run(() => client.identity());
+    }
+    deadline.check();
+    // Course work uses the usual transport limits, not the authentication budget.
+    return { client: new BrightspaceClient(playwrightTransport(context), bearer), context };
+  } catch (error) {
+    await closeQuietly(() => context.dispose());
+    throw error;
+  } finally { detach(); }
+}
+
+/** Hidden SSO only: never enters credentials or opens interactive login. */
+async function refreshSessionUnlocked(store: SessionStore, deadline: AuthDeadline, previous: Session): Promise<void> {
+  const existing = await loadSession(store, deadline);
+  if (existing.savedAt !== previous.savedAt) {
+    try {
+      const connection = await verifiedClient(existing, deadline);
+      await closeQuietly(() => connection.context.dispose());
+      return;
+    } catch (error) { if (!isAuthError(error)) throw error; }
+  }
+  const browser = await deadline.run(() => chromium.launch({ headless: true, timeout: deadline.remaining() }), b => b.close());
+  const detach = deadline.onCancel(() => { void closeQuietly(() => browser.close()); });
+  try {
+    const context = await deadline.run(() => browser.newContext({ storageState: existing.state }));
+    const page = await deadline.run(() => context.newPage());
+    let bearer: string | undefined;
+    page.on('request', request => {
+      const url = new URL(request.url());
+      const authorization = request.headers().authorization;
+      if (url.origin === BASE_URL && url.pathname.startsWith('/d2l/') && authorization?.startsWith('Bearer ')) bearer = authorization.slice(7);
+    });
+    await deadline.run(() => page.goto(`${BASE_URL}/d2l/home`, { waitUntil: 'domcontentloaded', timeout: deadline.remaining() }));
     if (new URL(page.url()).origin === BASE_URL && /\/d2l\/loginh?\/?$/i.test(new URL(page.url()).pathname)) {
       const munLogin = page.getByRole('link', { name: /MUN Login/i }).first();
-      if (await munLogin.isVisible().catch(() => false)) await munLogin.click({ timeout: 10_000 });
+      if (await deadline.run(() => munLogin.isVisible())) await deadline.run(() => munLogin.click({ timeout: deadline.remaining(10_000) }));
     }
-    const deadline = Date.now() + 30_000;
-    while (Date.now() < deadline) {
+    while (true) {
+      deadline.check();
       const current = new URL(page.url());
       if (current.origin === BASE_URL && /^\/d2l\/home(?:\/\d+)?\/?$/.test(current.pathname)) {
-        const client = new BrightspaceClient(playwrightTransport(context.request), bearer);
+        const client = new BrightspaceClient(playwrightTransport(context.request, deadline), bearer, deadline.sleep);
         try {
-          await client.identity();
-          await client.courses();
-          const raw = await context.storageState();
-          await store.save({
-            origin: BASE_URL,
-            savedAt: new Date().toISOString(),
-            bearer,
+          await deadline.run(() => client.identity());
+          await deadline.run(() => client.courses());
+          const raw = await deadline.run(() => context.storageState());
+          deadline.check();
+          // Retain the lifecycle lock until the fenced atomic save finishes.
+          await store.save({ origin: BASE_URL, savedAt: new Date().toISOString(), bearer,
             state: { cookies: raw.cookies.filter(cookie => allowedCookie(cookie.domain)), origins: [] },
-          });
+          }, deadline.check);
           return;
-        } catch (error) {
-          if (!(error instanceof AppError) || !AUTH_ERRORS.includes(error.code)) throw error;
-        }
+        } catch (error) { if (!isAuthError(error)) throw error; }
       }
-      if (current.hostname === 'login.mun.ca' && await page.locator('input[type="password"]').isVisible().catch(() => false)) break;
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (current.hostname === 'login.mun.ca' && await deadline.run(() => page.locator('input[type="password"]').isVisible())) {
+        throw new AppError('AUTH_REQUIRED', 'MUN requires a fresh interactive sign-in or MFA. Run npm run login in the project folder.');
+      }
+      await deadline.sleep(1000);
     }
-    throw new AppError('AUTH_REQUIRED', 'MUN requires a fresh interactive sign-in or MFA. Run npm run login in the project folder.');
-  } finally { await browser.close(); }
+  } finally { detach(); await closeQuietly(() => browser.close()); }
 }
 
 export async function refreshSession(store: SessionStore): Promise<void> {
-  return store.withLifecycleLock(() => refreshSessionUnlocked(store));
+  const deadline = new AuthDeadline(RENEW_BUDGET_MS);
+  try {
+    const previous = await loadSession(store, deadline);
+    await store.withLifecycleLock(() => refreshSessionUnlocked(store, deadline, previous), deadline.remaining(), deadline.check);
+  } finally { deadline.dispose(); }
 }
 
-async function refreshOnce(store: SessionStore) {
-  refreshInProgress ??= refreshSession(store).finally(() => { refreshInProgress = undefined; });
-  return refreshInProgress;
+interface Renewal { deadline: AuthDeadline; promise: Promise<void>; waiters: number }
+const renewals = new Map<string | SessionStore, Renewal>();
+async function refreshOnce(store: SessionStore, caller: AuthDeadline, previous: Session) {
+  const key = store.file ? resolve(store.file).toLowerCase() : store;
+  let renewal = renewals.get(key);
+  if (!renewal) {
+    const deadline = new AuthDeadline(AUTH_BUDGET_MS);
+    renewal = { deadline, waiters: 0, promise: Promise.resolve() };
+    const entry = renewal;
+    entry.promise = store.withLifecycleLock(() => refreshSessionUnlocked(store, deadline, previous), SESSION_LOCK_WAIT_MS, deadline.check)
+      .finally(() => { deadline.dispose(); if (renewals.get(key) === entry) renewals.delete(key); });
+    renewals.set(key, entry);
+  }
+  const entry = renewal;
+  entry.waiters++;
+  try { await caller.run(() => entry.promise); }
+  finally {
+    entry.waiters--;
+    // A timed-out waiter cannot cancel renewal that another caller still owns.
+    if (entry.waiters === 0) {
+      entry.deadline.cancel();
+      if (renewals.get(key) === entry) renewals.delete(key);
+    }
+  }
 }
 
 export async function withSession<T>(store: SessionStore, action: (client: BrightspaceClient) => Promise<T>): Promise<T> {
-  let session = await store.load();
-  if (!session) throw new AppError('AUTH_REQUIRED', 'No saved session. Run npm run login in the project folder.');
-  const interval = sessionHours();
-  const savedAt = Date.parse(session.savedAt);
-  if (interval > 0 && (!Number.isFinite(savedAt) || Date.now() - savedAt >= interval * 3_600_000)) {
-    await refreshOnce(store);
-    session = (await store.load())!;
-  }
-  let connection: Awaited<ReturnType<typeof verifiedClient>>;
+  const deadline = new AuthDeadline(AUTH_BUDGET_MS);
+  let connection: Awaited<ReturnType<typeof verifiedClient>> | undefined;
   try {
-    connection = await verifiedClient(session);
+    let session = await loadSession(store, deadline);
+    let renewed = false;
+    const interval = sessionHours();
+    const savedAt = Date.parse(session.savedAt);
+    if (interval > 0 && (!Number.isFinite(savedAt) || Date.now() - savedAt >= interval * 3_600_000)) {
+      await refreshOnce(store, deadline, session);
+      renewed = true;
+      session = await loadSession(store, deadline);
+    }
+    try { connection = await verifiedClient(session, deadline); }
+    catch (error) {
+      if (renewed || !isAuthError(error)) throw error;
+      await refreshOnce(store, deadline, session);
+      session = await loadSession(store, deadline);
+      connection = await verifiedClient(session, deadline);
+    }
+    deadline.check();
   } catch (error) {
-    if (!(error instanceof AppError) || !AUTH_ERRORS.includes(error.code)) throw error;
-    await refreshOnce(store);
-    session = (await store.load())!;
-    connection = await verifiedClient(session);
-  }
+    if (connection) await closeQuietly(() => connection!.context.dispose());
+    throw error;
+  } finally { deadline.dispose(); }
   try { return await action(connection.client); }
-  finally { await connection.context.dispose(); }
+  finally { await closeQuietly(() => connection.context.dispose()); }
 }
 
 async function loginUnlocked(store: SessionStore, timeoutMs: number): Promise<void> {

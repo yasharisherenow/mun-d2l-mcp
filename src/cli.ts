@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import { access } from 'node:fs/promises';
-import { chromium } from 'playwright';
+import { doctor } from './doctor.js';
 import { login, refreshSession, withSession } from './auth/login.js';
 import { SessionStore } from './auth/store.js';
 import { AppError, safeError } from './errors.js';
@@ -25,23 +24,13 @@ async function main(): Promise<void> {
       });
       break;
     case 'doctor': {
-      const checks: Array<{ check: string; ok: boolean; detail: string }> = [];
-      try { await access(chromium.executablePath()); checks.push({ check: 'chromium', ok: true, detail: 'Installed' }); }
-      catch { checks.push({ check: 'chromium', ok: false, detail: 'Run npx playwright install chromium' }); }
-      try {
-        await withSession(store, async client => {
-          await client.identity();
-          const versions = await client.apiVersions();
-          checks.push({ check: 'authentication', ok: true, detail: 'Identity verified' });
-          checks.push({ check: 'api_versions', ok: !!versions.lp && !!versions.le, detail: JSON.stringify(versions) });
-          const leVersion = Number(versions.le);
-          checks.push({ check: 'calendar_api', ok: Number.isFinite(leVersion) && leVersion >= 1.75, detail: `LE API ${versions.le ?? 'missing'} (minimum supported: 1.75)` });
-          try { await client.get('https://example.com/d2l/api/test'); }
-          catch (error) { checks.push({ check: 'origin_guard', ok: error instanceof AppError && error.code === 'URL_BLOCKED', detail: 'Off-origin request blocked' }); }
-        });
-      } catch (error) { const safe = safeError(error); checks.push({ check: 'authentication', ok: false, detail: `${safe.code}: ${safe.message}` }); }
-      for (const check of checks) console.error(`${check.ok ? 'PASS' : 'FAIL'} ${check.check}: ${check.detail}`);
-      if (checks.some(check => !check.ok)) process.exitCode = 1;
+      const result = await doctor(store);
+      if (process.argv.includes('--json')) console.log(JSON.stringify(result));
+      else {
+        for (const check of result.checks) console.error(`${check.ok ? 'PASS' : 'FAIL'} ${check.check}: ${check.code ?? 'OK'} (${check.elapsed_ms}ms)`);
+        if (result.versions) console.error(`Selected APIs: LP ${result.versions.lp}, LE ${result.versions.le}`);
+      }
+      if (result.checks.some(check => !check.ok)) process.exitCode = 1;
       break;
     }
     case 'renew':

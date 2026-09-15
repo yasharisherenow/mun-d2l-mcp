@@ -4,6 +4,21 @@ This document lists common error codes, their meanings, typical causes, and reco
 
 ## Authentication and session errors
 
+### AUTH_TIMEOUT
+
+**Cause**: Authentication, verification, retries, or silent renewal exceeded the
+40-second MCP-request budget. Work is fenced from saving a late session after expiry.
+
+**Recovery**:
+1. Run `npm run renew` locally; it has a separate 120-second silent-renewal budget
+2. Complete interactive sign-in if MUN requires it
+3. Retry the MCP tool call
+
+This budget applies to authentication, not subsequent course retrieval or document
+extraction.
+
+---
+
 ### AUTH_REQUIRED
 
 **Message**: `AUTH_REQUIRED`
@@ -16,7 +31,8 @@ This document lists common error codes, their meanings, typical causes, and reco
 3. Wait for the browser to close automatically
 4. Retry your tool call
 
-**Prevention**: Keep automatic session renewal enabled (default: every 4 hours). See `MUN_D2L_SESSION_HOURS` in README.
+**Prevention**: Keep age-based renewal enabled (default: four hours). Renewal is
+checked when a tool request begins, not by a background scheduler.
 
 ---
 
@@ -45,11 +61,11 @@ This document lists common error codes, their meanings, typical causes, and reco
 **Cause**: Another login, renewal, or logout operation is already in progress. The server is using an exclusive cross-process lock to prevent concurrent auth operations.
 
 **Recovery**:
-1. Wait 10–30 seconds for the current operation to complete
+1. Wait for the current lifecycle operation to complete
 2. Retry your tool call
 
 **Why this happens**:
-- You ran `npm run login` while automatic renewal was running
+- You ran `npm run login` while a tool-triggered renewal was running
 - Two tool calls reached the auth step at the same time
 - A previous operation is still cleaning up
 

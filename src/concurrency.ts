@@ -4,14 +4,23 @@ export class BoundedSemaphore {
   private active = 0;
   private readonly waiters: Array<() => void> = [];
 
-  constructor(private readonly limit: number, private readonly maxQueue: number, private readonly label: string) {
+  constructor(private readonly limit: number, private readonly maxQueue: number, private readonly label: string, private readonly queueWaitMs?: number) {
     if (!Number.isInteger(limit) || limit < 1 || !Number.isInteger(maxQueue) || maxQueue < 0) throw new Error('Invalid semaphore limits');
   }
 
   async run<T>(action: () => Promise<T>): Promise<T> {
     if (this.active >= this.limit) {
       if (this.waiters.length >= this.maxQueue) throw new AppError('RESOURCE_LIMIT', `${this.label} is busy. Retry after another operation finishes.`);
-      await new Promise<void>(resolve => this.waiters.push(resolve));
+      await new Promise<void>((resolve, reject) => {
+        const ready = () => { clearTimeout(timer); resolve(); };
+        const timer = this.queueWaitMs === undefined ? undefined : setTimeout(() => {
+          const index = this.waiters.indexOf(ready);
+          if (index < 0) return;
+          this.waiters.splice(index, 1);
+          reject(new AppError('RESOURCE_LIMIT', `${this.label} queue wait expired. Retry later.`));
+        }, this.queueWaitMs);
+        this.waiters.push(ready);
+      });
     } else {
       this.active++;
     }

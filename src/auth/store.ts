@@ -57,11 +57,13 @@ export class SessionStore {
     this.lockFile = resolvedLock;
   }
 
-  async withLifecycleLock<T>(action: () => Promise<T>, timeoutMs = 11 * 60_000): Promise<T> {
+  async withLifecycleLock<T>(action: () => Promise<T>, timeoutMs = 11 * 60_000, check: () => void = () => {}): Promise<T> {
+    check();
     await mkdir(this.directory, { recursive: true });
     const deadline = Date.now() + timeoutMs;
     let handle: Awaited<ReturnType<typeof open>> | undefined;
     while (!handle) {
+      check();
       try {
         handle = await open(this.lockFile, 'wx', 0o600);
         await handle.writeFile(JSON.stringify({ pid: process.pid, acquiredAt: new Date().toISOString() }));
@@ -89,14 +91,15 @@ export class SessionStore {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-    try { return await action(); }
+    try { check(); return await action(); }
     finally {
       await handle.close().catch(() => undefined);
       await rm(this.lockFile, { force: true }).catch(() => undefined);
     }
   }
 
-  async save(session: Session): Promise<void> {
+  async save(session: Session, check: () => void = () => {}): Promise<void> {
+    check();
     let secret: string | null | undefined;
     try {
       secret = this.keys.getPassword();
@@ -108,13 +111,15 @@ export class SessionStore {
     const key = Buffer.from(secret, 'base64');
     if (key.length !== 32) throw new AppError('KEYRING_INVALID', 'Session encryption key is invalid. Run logout, then login.');
     const iv = randomBytes(12);
-    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const cipher = createCipheriv('aes-256-gcm', key, iv, { authTagLength: 16 });
     cipher.setAAD(Buffer.from(BASE_URL));
     const data = Buffer.concat([cipher.update(JSON.stringify(sanitizeSession(session)), 'utf8'), cipher.final()]);
     await mkdir(this.directory, { recursive: true });
     const temporary = join(this.directory, `session-${randomBytes(8).toString('hex')}.tmp`);
     try {
+      check();
       await writeFile(temporary, JSON.stringify({ version: 1, iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64'), data: data.toString('base64') }), { flag: 'wx', mode: 0o600 });
+      check();
       await rename(temporary, this.file);
     } finally { key.fill(0); await rm(temporary, { force: true }); }
   }
@@ -135,7 +140,7 @@ export class SessionStore {
       const iv = Buffer.from(saved.iv, 'base64');
       const tag = Buffer.from(saved.tag, 'base64');
       if (key.length !== 32 || iv.length !== 12 || tag.length !== 16 || saved.data.length > 2 * 1024 * 1024) throw new Error('Invalid envelope');
-      const decipher = createDecipheriv('aes-256-gcm', key, iv);
+      const decipher = createDecipheriv('aes-256-gcm', key, iv, { authTagLength: 16 });
       decipher.setAAD(Buffer.from(BASE_URL));
       decipher.setAuthTag(tag);
       try { return sanitizeSession(JSON.parse(Buffer.concat([decipher.update(Buffer.from(saved.data, 'base64')), decipher.final()]).toString('utf8'))); }

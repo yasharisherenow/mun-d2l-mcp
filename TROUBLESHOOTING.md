@@ -43,9 +43,33 @@ If you run mun-d2l-mcp under a different Windows user account (including running
 
 - **Default renewal interval**: Every 4 hours
 - **How it works**: The server uses your saved MUN Login cookies (encrypted) to silently renew your Brightspace session
-- **When it runs**: On a schedule you control via `MUN_D2L_SESSION_HOURS`
+- **When it runs**: At the start of a tool request when the saved session reaches the age configured by `MUN_D2L_SESSION_HOURS`
 - **What happens on success**: You continue using the same session with no interruption
-- **What happens on failure**: The next time you use a tool, the server will attempt interactive login if needed
+- **What happens on failure**: The tool returns a classified error; run `npm run renew` or `npm run login` locally
+
+### Authentication timeout or busy session
+
+MCP authentication has a 40-second budget. Waiting for another login, renewal, or
+logout is limited to five seconds. `AUTH_TIMEOUT` means the overall authentication
+budget expired; run `npm run renew` locally, then retry. `SESSION_BUSY` means another
+session lifecycle command still holds the cross-process lock; wait for that command
+to finish and retry.
+
+These limits cover authentication only. Course retrieval and document extraction
+start after authentication and retain their existing per-request and parser limits.
+
+### Classified live verification
+
+Build first, then run `npm run verify:live`. Use `-- --json` for machine-readable
+output. Authentication expiry, timeout/busy, upstream availability, incomplete
+coverage, response-contract, and local-setup failures are reported separately.
+
+The first successful run warns that no API-version baseline exists. Run
+`npm run verify:live -- --accept-baseline` to save one only after every required
+check passes with complete deadline coverage. Version drift is a warning until a
+successful run explicitly accepts the new baseline. The baseline is stored at
+`%LOCALAPPDATA%\mun-d2l-mcp\verification-baseline.json` and contains only selected
+LP/LE versions, the application version, and a verification timestamp.
 
 ### Session renewal FAQ
 
@@ -59,21 +83,23 @@ npm run status
 This shows:
 - Your current session age
 - Whether authentication is available
-- When the next renewal check is scheduled
+- How long remains until the next request will attempt age-based renewal
 
 **Q: What happens if I ignore renewal warnings?**
 
-Nothing immediately happens. Your Brightspace session will eventually expire (typically 24-48 hours after login, or sooner if MUN's SSO session expires). When it does:
-1. The next tool call will fail with `AUTH_REQUIRED` or `SESSION_UNREADABLE`
+Nothing immediately happens. MUN controls the actual session lifetime and does not
+expose a reliable expiry time. When the session expires:
+1. The next tool call attempts silent renewal once and otherwise returns `AUTH_REQUIRED`
 2. You'll need to run `npm run login` to re-authenticate
 
-**Q: Can I disable automatic renewal?**
+**Q: Can I disable age-based renewal?**
 
 Yes, set `MUN_D2L_SESSION_HOURS=0` when adding the MCP entry to Codex. The server will only refresh when Brightspace rejects the session.
 
 **Q: Does renewal happen while I'm sleeping?**
 
-Yes, if the MCP server is running. Renewal runs on a schedule regardless of your activity.
+No. Renewal is checked only when a tool request or an explicit `npm run renew`
+command runs.
 
 **Q: What's the fastest renewal interval I can use?**
 
@@ -97,13 +123,13 @@ npm run login
 Then retry your tool call.
 
 **Why this happens**:
-- Your Brightspace session cookie expired (typically 24-48 hours after login)
+- Your Brightspace session cookie expired according to MUN's server-side policy
 - Your MUN SSO session expired (may happen sooner than Brightspace)
 - Silent renewal failed repeatedly and the server couldn't refresh
 - Your session was invalidated by a password change, security event, or device logout
 
 **Prevention**:
-- Use automatic renewal: keep the default `MUN_D2L_SESSION_HOURS=4` or lower
+- Keep age-based renewal enabled with the default `MUN_D2L_SESSION_HOURS=4` or lower
 - Run `npm run status` periodically to check session age
 - If you change your MUN password, run `npm run login` to update your session
 
@@ -142,7 +168,8 @@ This deletes the corrupted session and creates a fresh one.
 
 **Cause**: Another login, renewal, or logout operation is already in progress.
 
-**Fix**: Wait 10–30 seconds and retry.
+**Fix**: Wait for the other lifecycle command to finish, then retry. An MCP tool
+waits at most five seconds before returning `SESSION_BUSY`.
 
 **Why this happens**:
 - You ran `npm run login` while a renewal was happening
@@ -154,6 +181,7 @@ This deletes the corrupted session and creates a fresh one.
 | Error Code | Meaning | Quick Fix |
 | --- | --- | --- |
 | `AUTH_REQUIRED` | No valid Brightspace session | `npm run login` |
+| `AUTH_TIMEOUT` | MCP authentication exceeded its 40-second budget | `npm run renew`, then retry |
 | `SESSION_UNREADABLE` | Encrypted session corrupted or key missing | `npm run logout` then `npm run login` |
 | `SESSION_BUSY` | Another auth operation is running | Wait 10–30 sec and retry |
 | `KEYRING_UNAVAILABLE` | Credential Manager not accessible | Run as your normal user account, not Administrator |
@@ -174,16 +202,19 @@ This deletes the corrupted session and creates a fresh one.
 
 ## Renewal timeout
 
-### Error: Renewal attempt times out
+### Error: `AUTH_TIMEOUT`
 
 **Symptoms**:
-- `npm run status` hangs for more than 30 seconds
-- A tool call is extremely slow (renewal is happening in the background)
-- Renewal seems to "fail silently" with no error message
+- A tool returns `AUTH_TIMEOUT` after authentication or silent renewal stalls
+- `npm run renew` reports the same code after its separate 120-second budget
 
-**What happened**: The renewal process couldn't complete in time (30-second timeout). The server cancelled it and will try again at the next scheduled renewal.
+**What happened**: Authentication did not complete within its bounded deadline.
+Owned browser and request resources are closed, and a late operation cannot replace
+the saved session. The previous encrypted file is preserved, but it might already be
+expired at MUN.
 
-**Fix**: No immediate action needed. Your current session is still valid.
+**Fix**: Run `npm run renew` locally. If MUN requests sign-in or MFA, complete the
+visible login fallback. Then retry the tool.
 
 **If this keeps happening**:
 1. Check your internet connection
@@ -192,11 +223,12 @@ This deletes the corrupted session and creates a fresh one.
    ```powershell
    npm run renew
    ```
-4. If `npm run renew` also times out, your Brightspace or network connectivity is impaired. Try again in a few minutes.
+4. If `npm run renew` also times out, verify MUN service availability and try again later.
 
 ### Disabling timeout-prone renewal
 
-If renewal keeps timing out and you prefer on-demand login, disable automatic renewal:
+If renewal keeps timing out and you prefer rejection-triggered renewal, disable the
+session-age trigger:
 
 ```powershell
 codex mcp remove mun-d2l-mcp

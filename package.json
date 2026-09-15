@@ -7,6 +7,7 @@
   "files": [
     "dist/",
     "README.md",
+    "CHANGELOG.md",
     "SECURITY.md",
     "LICENSE"
   ],
@@ -17,6 +18,8 @@
   },
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "verify:live": "node dist/verify-live.js",
     "test": "vitest run --dir tests",
     "security:audit": "npm audit --omit=dev --audit-level=high",
     "smoke": "node scripts/smoke.mjs",

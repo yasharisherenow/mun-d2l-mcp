@@ -4,6 +4,7 @@ import path, { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { SessionStore, type KeyStore, type Session } from '../src/auth/store.js';
 import { BASE_URL } from '../src/config.js';
+import { AppError } from '../src/errors.js';
 
 const directories: string[] = [];
 afterEach(async () => { for (const directory of directories.splice(0)) await rm(directory, { recursive: true, force: true }); });
@@ -15,6 +16,24 @@ async function fixture() {
   return { store: new SessionStore(directory, keys), keys };
 }
 const session: Session = { origin: BASE_URL, savedAt: new Date().toISOString(), bearer: 'SENSITIVE_TOKEN', state: { cookies: [], origins: [] } };
+it('fences an expired save before replacing the previous encrypted session', async () => {
+  const { store } = await fixture();
+  await store.save(session);
+  const before = await readFile(store.file, 'utf8');
+  let checks = 0;
+  await expect(store.save({ ...session, bearer: 'NEW' }, () => {
+    if (++checks === 3) throw new AppError('AUTH_TIMEOUT', 'Timed out');
+  })).rejects.toMatchObject({ code: 'AUTH_TIMEOUT' });
+  expect(await readFile(store.file, 'utf8')).toBe(before);
+});
+it('releases a newly acquired lifecycle lock when the deadline expired during acquisition', async () => {
+  const { store } = await fixture();
+  let checks = 0;
+  await expect(store.withLifecycleLock(async () => 'never', 5000, () => {
+    if (++checks === 3) throw new AppError('AUTH_TIMEOUT', 'Timed out');
+  })).rejects.toMatchObject({ code: 'AUTH_TIMEOUT' });
+  await expect(store.withLifecycleLock(async () => 'free', 100)).resolves.toBe('free');
+});
 it('encrypts on disk and survives a fresh store instance', async () => {
   const { store, keys } = await fixture();
   await store.save(session);

@@ -2,6 +2,7 @@ import type { APIRequestContext } from 'playwright';
 import { z } from 'zod';
 import { BASE_URL } from '../config.js';
 import { AppError } from '../errors.js';
+import type { AuthDeadline } from '../auth/deadline.js';
 
 export interface HttpResponse { status: number; headers: Record<string, string>; body: Buffer }
 export type Transport = (url: string, headers: Record<string, string>) => Promise<HttpResponse>;
@@ -9,8 +10,9 @@ export const MAX_RESPONSE_BYTES = 20 * 1024 * 1024;
 export const MAX_JSON_BYTES = 5 * 1024 * 1024;
 export const MAX_PAGED_BYTES = 20 * 1024 * 1024;
 export const MAX_PAGED_ITEMS = 10_000;
-export const playwrightTransport = (context: APIRequestContext): Transport => async (url, headers) => {
-  const response = await context.get(url, { headers: { ...headers, 'Accept-Encoding': 'identity' }, maxRedirects: 0, timeout: 20_000, failOnStatusCode: false });
+export const playwrightTransport = (context: APIRequestContext, deadline?: AuthDeadline): Transport => async (url, headers) => {
+  deadline?.check();
+  const response = await context.get(url, { headers: { ...headers, 'Accept-Encoding': 'identity' }, maxRedirects: 0, timeout: deadline?.remaining(20_000) ?? 20_000, failOnStatusCode: false });
   try {
     const responseHeaders = response.headers();
     const lengthHeader = responseHeaders['content-length'];

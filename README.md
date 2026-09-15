@@ -68,16 +68,28 @@ source changes and restart the MCP connection. There is no automatic updater.
 
 ## Session renewal and timeout handling
 
-The server proactively renews its Brightspace session every four hours by default. This means:
+The server checks session age when an MCP tool request begins; it does not run a
+background timer. By default, a session at least four hours old triggers one silent
+renewal attempt using the encrypted MUN Login state. A rejected session can also
+trigger one attempt. The server never enters a password, initiates MFA, or opens an
+interactive browser during a tool call.
 
-- **Renewal timing**: The server checks and renews your session on a schedule you control via `MUN_D2L_SESSION_HOURS`
-- **Silent renewal**: Most renewal attempts happen silently in the background using your saved MUN login session state (encrypted Brightspace and MUN Login cookies)
-- **What happens if renewal fails**: If silent renewal fails (typically because MUN's SSO session has expired or policy requires MFA), the next Codex tool call will attempt to open an interactive browser login. This only happens when needed, not on every renewal failure.
-- **When renewal times out**: If a renewal attempt hangs for more than 30 seconds, it is cancelled and the server continues using the existing session. The next scheduled renewal will try again.
+Authentication work for an MCP request has a 40-second budget, including renewal,
+verification, retries, and up to five seconds waiting for another session operation.
+An expired budget returns `AUTH_TIMEOUT`; an occupied lifecycle lock returns
+`SESSION_BUSY`. Run `npm run renew` locally to allow a separate 120-second silent
+attempt with interactive fallback when MUN requires sign-in. `npm run login` keeps
+its existing ten-minute interactive allowance.
+
+These authentication and queue budgets do not limit the later course-data request
+or document extraction. Each network request and parser still has its own limits.
 
 ### Configuring the renewal interval
 
-To change when renewal happens, set `MUN_D2L_SESSION_HOURS` on the MCP entry. It accepts decimal hours from `0.25` to `168`; use `0` to disable scheduled renewal and refresh only when Brightspace rejects the session.
+To change the age that triggers renewal on the next request, set
+`MUN_D2L_SESSION_HOURS` on the MCP entry. It accepts decimal hours from `0.25` to
+`168`; use `0` to disable age-based renewal and refresh only when Brightspace
+rejects the session.
 
 **Default (4 hours):**
 ```powershell
@@ -126,10 +138,14 @@ Try:
 | `npm run test-course -- <course-id>` | Check assignment, quiz, grade, and content permissions for one course |
 | `npm run logout` | Delete this app's local session and encryption key |
 | `npm run build` | Compile TypeScript to `dist/` |
+| `npm run typecheck` | Type-check without writing build output |
 | `npm test` | Run offline tests using synthetic data |
 | `npm run security:audit` | Audit production dependencies for known vulnerabilities |
 | `npm run smoke` | Verify an actual stdio handshake and the tool definitions |
 | `npm run smoke -- --live` | Also read your courses and upcoming deadlines |
+| `npm run verify:live` | Run classified live integration checks without exposing course data |
+| `npm run verify:live -- --json` | Emit the live verification report as JSON |
+| `npm run verify:live -- --accept-baseline` | Save tested API versions after every live check passes |
 | `npm run verify:ui` | Compare a sample of API data with the live Brightspace UI |
 
 Logout does not sign out other browsers or revoke the university session remotely.
@@ -224,6 +240,7 @@ Quick reference for common error codes:
 | Error | Action |
 | --- | --- |
 | `AUTH_REQUIRED` | Run `npm run login`, then retry the tool |
+| `AUTH_TIMEOUT` | Run `npm run renew` locally, then retry the tool |
 | `PERMISSION_DENIED` | Check that the resource is available to your account in Brightspace |
 | `KEYRING_UNAVAILABLE` | Run under your normal Windows account with Credential Manager available |
 | `SESSION_UNREADABLE` | Run `npm run logout`, then `npm run login` |
@@ -240,8 +257,11 @@ Quick reference for common error codes:
 `src/auth` handles interactive login and encrypted persistence; `src/api` handles
 read requests, version discovery, retries and pagination; `src/tools` contains the
 study data transformations; `src/server.ts` registers the twelve MCP tools.
-Tests use synthetic data and do not require a MUN account. Live smoke tests require
-an existing login and print counts rather than course content or credentials.
+Tests use synthetic data and do not require a MUN account. `npm run verify:live`
+requires an existing login and reports only safe status, timing, counts, and API
+versions. Its baseline is stored outside the repository under `%LOCALAPPDATA%`.
+See [portability notes](docs/portability.md), [security review evidence](docs/security-reviews.md),
+and the [changelog](CHANGELOG.md).
 
 ## License
 
