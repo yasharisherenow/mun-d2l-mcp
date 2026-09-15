@@ -10,9 +10,13 @@
 
 ![MUN D2L MCP architecture](docs/assets/architecture.png)
 
-The MCP server runs on your Windows computer and communicates with Codex over
+The MCP server runs on your Windows computer and communicates with MCP clients over
 standard input/output. Only its guarded Brightspace client sends authenticated HTTPS
 requests, and saved authentication stays encrypted outside the repository.
+
+Use it with Codex, Claude Code, Cursor, VS Code/Copilot, Gemini CLI, or another
+client that launches local stdio MCP servers. See the
+[multi-client setup guide](docs/mcp-clients.md) for configuration and verification.
 
 ![Secure MUN D2L authentication lifecycle](docs/assets/authentication-flow.png)
 
@@ -113,7 +117,7 @@ Try:
 | Command | Purpose |
 | --- | --- |
 | `npm run login` | Sign in interactively and replace the session after verification |
-| `npm start` | Start the MCP stdio server; normally launched by Codex |
+| `npm start` | Start the MCP stdio server; normally launched by your MCP client |
 | `npm run status` | Check authentication and show session age and the next silent-renewal check |
 | `npm run renew` | Attempt silent renewal, opening interactive MUN login only when required |
 | `npm run doctor` | Check Chromium, authentication, API versions, and the origin guard |

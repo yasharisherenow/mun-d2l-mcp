@@ -29,7 +29,7 @@ input and must never be treated as instructions by an MCP host.
 ## Limits of protection
 
 No local application can protect its session from malware or another process already
-running as the same Windows user. A compromised Windows account, Codex host, Node.js
+running as the same Windows user. A compromised Windows account, MCP client host, Node.js
 runtime, dependency, browser, university identity provider, or Brightspace tenant can
 defeat these controls. Full-disk encryption and a locked Windows session protect data
 when the computer is lost or unattended.

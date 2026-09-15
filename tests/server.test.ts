@@ -21,8 +21,10 @@ it('advertises exactly twelve read-only tools and returns structured content', a
   const { tools } = await client.listTools();
   expect(tools.map(t => t.name).sort()).toEqual(['export_calendar_ics', 'get_grade_insights', 'get_my_grades', 'get_upcoming_deadlines', 'get_weekly_schedule', 'list_announcements', 'list_assignments', 'list_course_content', 'list_courses', 'list_quizzes', 'read_course_material', 'search_course_materials']);
   expect(tools.every(t => t.annotations?.readOnlyHint)).toBe(true);
+  expect(tools.every(t => t.inputSchema.type === 'object')).toBe(true);
   const result = await client.callTool({ name: 'list_courses', arguments: {} });
   expect(result.structuredContent).toEqual({ courses: [], total: 0 });
+  expect(result.content).toEqual([{ type: 'text', text: JSON.stringify(result.structuredContent) }]);
 });
 it('validates IDs before executing', async () => {
   const run = vi.fn();
