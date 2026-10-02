@@ -31,7 +31,8 @@
     "renew": "node dist/cli.js renew",
     "test-course": "node dist/cli.js test-course",
     "logout": "node dist/cli.js logout",
-    "start": "node dist/cli.js serve"
+    "start": "node dist/cli.js serve",
+    "update": "node scripts/update.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -41,12 +42,15 @@
     "@napi-rs/keyring": "2.0.0",
     "html-to-text": "10.0.1",
     "playwright": "1.63.0",
+    "saxes": "6.0.0",
     "unpdf": "1.8.1",
+    "yauzl": "3.4.0",
     "zod": "4.6.2"
   },
   "devDependencies": {
     "@types/html-to-text": "9.0.4",
     "@types/node": "22.20.2",
+    "@types/yauzl": "3.4.0",
     "typescript": "7.0.2",
     "vitest": "5.0.0"
   },

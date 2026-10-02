@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { BrightspaceClient, type HttpResponse } from '../src/api/client.js';
 import { StudyService } from '../src/tools/service.js';
+import { zip, docxEntries, pptxEntries } from './office-fixtures.js';
+// Workers execute compiled JavaScript; CI builds before running offline tests.
+vi.mock('../src/tools/extract.js', async () => import('../dist/tools/extract.js'));
 const response = (value: unknown, status = 200): HttpResponse => ({ status, headers: { 'content-type': 'application/json' }, body: Buffer.from(JSON.stringify(value)) });
 const course = { OrgUnit: { Id: 1, Name: 'Test course', Code: 'TEST' }, Access: { IsActive: true, CanAccess: true } };
 function service(routes: Record<string, unknown | HttpResponse>) {
@@ -16,6 +19,22 @@ function service(routes: Record<string, unknown | HttpResponse>) {
   return { service: new StudyService(new BrightspaceClient(transport)), transport };
 }
 describe('study tools', () => {
+  it('reads and searches Office topics and chunks assignment attachments', async () => {
+    const doc = zip(docxEntries());
+    const { service: s } = service({
+      'content/toc': { Modules: [{ ModuleId: 1, Title: 'Module', IsHidden: false, Modules: [], Topics: [{ TopicId: 2, Title: 'Topic', IsHidden: false }] }] },
+      'content/topics/2/file': { status: 200, headers: { 'content-type': 'application/octet-stream' }, body: doc },
+      'dropbox/folders/': [{ Id: 3, Name: 'Essay', IsHidden: false, Attachments: [{ FileId: 4, FileName: 'slides.pptx' }] }],
+      'dropbox/folders/3/attachments/4': { status: 200, headers: { 'content-type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }, body: zip(pptxEntries()) },
+    });
+    expect((await s.readMaterial({ course_id: 1, topic_id: 2 })).text).toContain('résumé');
+    const search = await s.searchMaterials(1, 'résumé');
+    expect(search.matches[0]).toMatchObject({ topic_id: 2, page: null });
+    const first = await s.readMaterial({ course_id: 1, assignment_id: 3, attachment_id: 4, max_characters: 8 });
+    expect(first.text).toBe('Slide 1\n'); expect(first.next_offset).toBe(8);
+    const next = await s.readMaterial({ course_id: 1, assignment_id: 3, attachment_id: 4, offset: first.next_offset!, max_characters: 5 });
+    expect(next.text).toBe('First'); expect(next.pages).toBeNull();
+  });
   it('separates category placeholder totals from individual grades', async () => {
     const { service: s } = service({ 'grades/values/myGradeValues/': [
       { GradeObjectIdentifier: '2', GradeObjectName: 'Quizzes', GradeObjectTypeName: 'Category', DisplayedGrade: '0 / 30', PointsNumerator: 0 },
