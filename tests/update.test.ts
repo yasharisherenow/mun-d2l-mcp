@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, existsSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { update, runProcess } from '../scripts/update.mjs';
@@ -53,6 +53,13 @@ describe('safe explicit updater', () => {
   it('does nothing beyond fetching when already current', () => {
     const f = fixture(); update(f.options);
     expect(f.calls.every(call => call[0] === 'git')).toBe(true);
+    expect(f.messages.join('')).toContain('Already current');
+  });
+  it('accepts a Windows junction alias for the same checkout', () => {
+    const f = fixture(), alias = join(f.root, '..', 'checkout-alias');
+    symlinkSync(f.root, alias, 'junction');
+    const run = (command: string, args: string[], cwd: string, capture = true) => args.join(' ') === 'rev-parse --show-toplevel' ? f.root : f.run(command, args, cwd, capture);
+    update({ ...f.options, root: alias, run });
     expect(f.messages.join('')).toContain('Already current');
   });
   it.each(['tracked', 'untracked', 'branch', 'detached', 'remote', 'upstream', 'merge', 'rebase'])('refuses %s preflight state without fetching', state => {

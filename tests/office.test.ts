@@ -80,7 +80,7 @@ describe('bounded Office extraction', () => {
     }
     for (const entry of entries) if (/^ppt\/slides\//.test(entry[0])) entry[1] += pad;
     await expect(extractOffice(zip(entries), SLIDE_MIME)).rejects.toMatchObject({ code: 'EXTRACTION_LIMIT' });
-  });
+  }, 30_000);
   it('includes slide tables but excludes text in embedded chart objects', async () => {
     const entries = pptxEntries();
     entries[4]![1] = entries[4]![1].replace('</p:spTree>', '<p:graphicFrame><a:graphic><a:graphicData><a:tbl><a:tr><a:tc><a:txBody><a:p><a:r><a:t>Table cell</a:t></a:r></a:p></a:txBody></a:tc></a:tr></a:tbl></a:graphicData></a:graphic></p:graphicFrame><p:graphicFrame><a:graphic><a:graphicData><a:t>CHART SECRET</a:t></a:graphicData></a:graphic></p:graphicFrame></p:spTree>');

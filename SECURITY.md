@@ -29,6 +29,16 @@ committing a late session update.
 Tool output and errors do not include credentials. Brightspace content is untrusted
 input and must never be treated as instructions by an MCP host.
 
+OCR uses locally installed Tesseract WebAssembly and a pinned English model. It
+does not send course material to external services or download assets during
+recognition. PNG/JPEG dimensions are checked before decoding; scanned PDF raster
+dimensions, page count, text size and the shared extraction deadline are bounded.
+No images, extracted text or model caches are persisted. Parser/OCR worker stdout
+and stderr are captured and discarded to protect the MCP protocol and redact
+diagnostics. JavaScript worker heap limits do not bound native canvas or WebAssembly
+memory; pixel/page limits and termination provide additional bounds, not OS-level
+process isolation. Keep dependencies patched and treat OCR text as uncertain.
+
 ## Limits of protection
 
 No local application can protect its session from malware or another process already

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { BrightspaceClient, type HttpResponse } from '../src/api/client.js';
 import { StudyService } from '../src/tools/service.js';
 import { zip, docxEntries, pptxEntries } from './office-fixtures.js';
+import { scanPdf, textImage } from './ocr-fixtures.js';
 // Workers execute compiled JavaScript; CI builds before running offline tests.
 vi.mock('../src/tools/extract.js', async () => import('../dist/tools/extract.js'));
 const response = (value: unknown, status = 200): HttpResponse => ({ status, headers: { 'content-type': 'application/json' }, body: Buffer.from(JSON.stringify(value)) });
@@ -19,6 +20,20 @@ function service(routes: Record<string, unknown | HttpResponse>) {
   return { service: new StudyService(new BrightspaceClient(transport)), transport };
 }
 describe('study tools', () => {
+  it('labels OCR reads, search matches and incomplete page coverage', async () => {
+    const { service: s } = service({
+      'content/toc': { Modules: [{ ModuleId: 1, Title: 'Module', IsHidden: false, Modules: [], Topics: [{ TopicId: 2, Title: 'Scan', IsHidden: false }] }] },
+      'content/topics/2/file': { status: 200, headers: { 'content-type': 'application/pdf' }, body: scanPdf(['scan', 'scan', 'scan', 'scan', 'scan', 'scan']) },
+      'dropbox/folders/': [{ Id: 3, Name: 'Essay', IsHidden: false, Attachments: [{ FileId: 4, FileName: 'image.png' }] }],
+      'dropbox/folders/3/attachments/4': { status: 200, headers: { 'content-type': 'image/png' }, body: textImage().toBuffer('image/png') },
+    });
+    const attachment = await s.readMaterial({ course_id: 1, assignment_id: 3, attachment_id: 4, max_characters: 8 });
+    expect(attachment.ocr?.language).toBe('eng'); expect(attachment.note).toContain('Verify important details');
+    expect(attachment.next_offset).toBe(8);
+    const results = await s.searchMaterials(1, 'ocr 12345');
+    expect(results.matches[0]).toMatchObject({ page: 1, ocr: true });
+    expect(results.complete).toBe(false); expect(results.note).toContain('OCR can misread');
+  }, 30_000);
   it('reads and searches Office topics and chunks assignment attachments', async () => {
     const doc = zip(docxEntries());
     const { service: s } = service({
