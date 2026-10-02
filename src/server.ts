@@ -50,10 +50,10 @@ export function createServer(run: RunStudy) {
   tool('export_calendar_ics', 'Generate read-only iCalendar text from the Brightspace schedule for import into Outlook, Apple Calendar, or Google Calendar.', {
     course_ids: z.array(z.number().int().positive()).min(1).max(100).optional(), days: z.number().int().min(1).max(365).default(30), from: z.iso.datetime({ offset: true }).optional(),
   }, (s, a) => s.calendarIcs(a.course_ids, a.days, a.from));
-  tool('search_course_materials', 'Search visible course topic metadata and a bounded number of accessible text, PDF, DOCX, and PPTX files. Returns module paths, snippets, offsets, and source links.', {
+  tool('search_course_materials', 'Search visible course topic metadata and a bounded number of accessible text, PDF, DOCX, PPTX, PNG, and JPEG files. Scanned PDF pages and images use local English OCR; OCR matches are labeled and may contain errors. Returns module paths, snippets, offsets, and source links.', {
     ...course, query: z.string().min(2).max(200), max_files: z.number().int().min(1).max(30).default(15),
   }, (s, a) => s.searchMaterials(a.course_id, a.query, a.max_files));
-  tool('read_course_material', 'Read a text, PDF, DOCX, or PPTX topic or assignment attachment. Provide topic_id OR assignment_id plus attachment_id. External links are not fetched. Use next_offset to continue long text. Office extraction omits images, embedded objects, and slide notes; hidden slides are excluded.', {
+  tool('read_course_material', 'Read a text, PDF, DOCX, PPTX, PNG, or JPEG topic or assignment attachment. Scanned PDF pages and images use local English OCR (up to five PDF pages), with uncertainty and incomplete coverage labeled. Provide topic_id OR assignment_id plus attachment_id. External links are not fetched. Use next_offset to continue long text. Office extraction omits images, embedded objects, and slide notes; hidden slides are excluded.', {
     ...course, topic_id: z.number().int().positive().optional(), assignment_id: z.number().int().positive().optional(), attachment_id: z.number().int().positive().optional(), offset: z.number().int().min(0).default(0), max_characters: z.number().int().min(100).max(50_000).default(20_000),
   }, (s, a) => s.readMaterial(a));
   return server;

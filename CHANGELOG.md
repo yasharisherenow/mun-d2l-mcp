@@ -5,6 +5,13 @@ repository history. The project has not published a tagged release yet.
 
 ## Unreleased
 
+- Added offline English OCR for PNG/JPEG and scanned PDF pages, with page offsets,
+  uncertainty labels, bounded raster/page limits and explicit incomplete coverage.
+- Fixed updater checkout validation for Windows junction/short-path aliases and
+  gave the large synthetic archive-budget test a CI-specific timeout allowance.
+- Enabled repository dependency graph/Dependabot alerts to restore dependency
+  review without disabling its moderate-severity gate.
+
 - Added bounded DOCX/PPTX text reading and search through existing material tools,
   preserving worker isolation and rejecting encrypted/macro-enabled Office files.
 - Added `npm run update` for clean-main fast-forward updates, dependency/Chromium

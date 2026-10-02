@@ -2,6 +2,7 @@ import { Worker } from 'node:worker_threads';
 import { AppError } from '../errors.js';
 import { BoundedSemaphore } from '../concurrency.js';
 import { officeMimes } from './office.js';
+import type { OcrMetadata } from './ocr.js';
 
 const extractionSlots = new BoundedSemaphore(2, 4, 'Document extraction');
 
@@ -10,6 +11,7 @@ export interface ExtractedDocument {
   pages: number | null;
   pageOffsets: number[] | null;
   truncated: boolean;
+  ocr?: OcrMetadata | null;
 }
 
 export async function extractDocument(body: Buffer, mime: string): Promise<ExtractedDocument> {
@@ -18,8 +20,8 @@ export async function extractDocument(body: Buffer, mime: string): Promise<Extra
     const decoded = body.toString('utf8');
     return { text: decoded.slice(0, 2_000_000), pages: null, pageOffsets: null, truncated: decoded.length > 2_000_000 };
   }
-  if (body.subarray(0, 5).toString() !== '%PDF-' && !['text/html', 'application/xhtml+xml', ...officeMimes].includes(mime)) {
-    throw new AppError('UNSUPPORTED_FILE', 'This material is not supported text, PDF, DOCX, or PPTX. Open its source link in Brightspace.');
+  if (body.subarray(0, 5).toString() !== '%PDF-' && !['text/html', 'application/xhtml+xml', 'image/png', 'image/jpeg', ...officeMimes].includes(mime)) {
+    throw new AppError('UNSUPPORTED_FILE', 'This material is not supported text, PDF, DOCX, PPTX, PNG, or JPEG. Open its source link in Brightspace.');
   }
   if (['text/html', 'application/xhtml+xml'].includes(mime) && /\/d2l\/login|<title>[^<]*login/i.test(body.toString('utf8', 0, Math.min(body.length, 100_000)))) {
     throw new AppError('AUTH_REQUIRED', 'Brightspace returned a login page. Run npm run login.');
@@ -29,9 +31,13 @@ export async function extractDocument(body: Buffer, mime: string): Promise<Extra
 
 async function extractInWorker(body: Buffer, mime: string): Promise<ExtractedDocument> {
   const worker = new Worker(new URL('./document-worker.js', import.meta.url), {
+    stdout: true, stderr: true,
     execArgv: process.execArgv.filter(argument => !argument.startsWith('--input-type')),
     resourceLimits: { maxOldGenerationSizeMb: 128, maxYoungGenerationSizeMb: 32, stackSizeMb: 4 },
   });
+  // Native OCR/PDF diagnostics must never reach the MCP protocol stream.
+  worker.stdout?.resume();
+  worker.stderr?.resume();
   const bytes = Uint8Array.from(body);
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {

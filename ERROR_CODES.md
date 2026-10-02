@@ -277,12 +277,21 @@ checked when a tool request begins, not by a background scheduler.
 
 ## Document parsing and text extraction
 
+### OCR_UNAVAILABLE
+
+**Cause**: The bundled local English OCR engine/model could not initialize.
+
+**Recovery**: Reinstall dependencies, rebuild and restart MCP. Disconnect running
+servers before reinstalling on Windows. No external OCR service or API key is used.
+
+---
+
 ### EXTRACTION_LIMIT
 
 **Message**: `EXTRACTION_LIMIT`
 
 **Cause**: Document extraction exceeded its 15-second worker deadline, worker memory
-limit, or Office archive/XML limits (2,000 entries, 10 MiB per selected XML part,
+limit, OCR raster limits (8 million pixels, 5000 pixels per side), or Office archive/XML limits (2,000 entries, 10 MiB per selected XML part,
 40 MiB selected XML cumulatively, or nesting depth 128). A worker failure also
 returns this code. Text beyond 2 million characters is truncated and labeled
 `truncated`, rather than raising this error.
@@ -326,11 +335,11 @@ or `.pptx` file and retry. External relationships are never fetched.
 **Message**: `UNSUPPORTED_FILE`
 
 **Cause**: The file format is unsupported (e.g., video, image, executable, legacy
-`.doc`/`.ppt`, encrypted or macro-enabled Office files).
+`.doc`/`.ppt`, encrypted or macro-enabled Office files, or images other than PNG/JPEG).
 
 **Recovery**:
 - Open the resource in Brightspace and view/read it manually
-- Supported formats: PDF, HTML, plain text, Markdown, CSV, Word `.docx`, PowerPoint `.pptx`
+- Supported formats: PDF, HTML, plain text, Markdown, CSV, Word `.docx`, PowerPoint `.pptx`, PNG, JPEG
 
 ---
 

@@ -1,9 +1,11 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// Git and Windows may spell the same directory through junctions or 8.3 aliases.
+export const canonicalPath = path => realpathSync.native(resolve(path)).toLowerCase();
 const expectedRemote = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)yasharisherenow\/mun-d2l-mcp(?:\.git)?\/?$/i;
 
 export function runProcess(command, args, cwd, capture = true) {
@@ -25,7 +27,7 @@ export function update({ root = repositoryRoot, platform = process.platform, nod
     if (platform !== 'win32' || Number(nodeVersion.split('.')[0]) < 22) throw new Error('Requires native Windows and Node.js 22 or newer.');
     if (!npmCli || !exists(npmCli)) throw new Error('Run this command through npm run update.');
     git('--version');
-    if (resolve(git('rev-parse', '--show-toplevel')).toLowerCase() !== resolve(root).toLowerCase()) throw new Error('Run from this repository checkout.');
+    if (canonicalPath(git('rev-parse', '--show-toplevel')) !== canonicalPath(root)) throw new Error('Run from this repository checkout.');
     for (const state of ['MERGE_HEAD', 'REBASE_HEAD', 'CHERRY_PICK_HEAD', 'REVERT_HEAD', 'rebase-merge', 'rebase-apply', 'sequencer']) {
       if (exists(resolve(root, git('rev-parse', '--git-path', state)))) throw new Error('Complete the active Git operation first.');
     }

@@ -25,8 +25,36 @@ Only unencrypted, non-macro `.docx` and `.pptx` files are supported. Convert leg
 `.doc`/`.ppt` files to a supported format or read them directly in Brightspace.
 `EXTRACTION_FAILED` means package validation or parsing failed; diagnostics omit
 document contents. `EXTRACTION_LIMIT` means a worker, XML or archive limit was
-exceeded. Image-only documents need the source application; OCR is not included.
+exceeded. Image-only Office documents need the source application; embedded-image
+OCR is not included.
 Slide notes and hidden slides are excluded. Use `next_offset` for long documents.
+
+## OCR for images and scanned PDFs
+
+PNG/JPEG files and PDF pages with no selectable text use local English OCR.
+No extra executable, API key, model download, or cloud service is required after
+`npm install`. Check source files for important numbers, dates, names, and formulas;
+OCR is approximate and handwriting may be inaccurate.
+
+`OCR_UNAVAILABLE` means the bundled engine/model could not initialize. Reinstall
+dependencies, rebuild, and restart MCP. Disconnect active MCP servers before a
+clean reinstall to avoid Windows native-module locks.
+
+`EXTRACTION_LIMIT` can mean a scan exceeds 8 million pixels, 5000 pixels per side,
+or the shared 15-second extraction deadline. Split or resize the source instead
+of increasing `max_characters`; chunking does not reduce OCR work.
+Only five scanned pages per PDF receive OCR; additional pages are listed in
+`ocr.skipped_pages`, with `truncated: true`. Text-bearing PDF pages still use
+normal extraction. Images embedded in Office/HTML and other image formats are
+outside this OCR feature.
+
+## GitHub dependency review
+
+Dependency review requires GitHub's dependency graph to be enabled. If the action
+says it is unsupported or the comparison API returns 403, enable Dependency graph
+and Dependabot alerts in the repository's Settings → Advanced Security, then rerun
+the check. This repository's alerts/graph were enabled to restore the comparison
+API. The moderate-severity dependency-review gate remains enabled in CI.
 
 ## Windows Credential Manager
 

@@ -220,12 +220,12 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
   values include release status, which is unknown without a release date. Check
   the source grade page when interpreting marks. Private comments are not returned.
 - Material reading supports PDF, HTML, plain text, Markdown, CSV, Word `.docx`,
-  and PowerPoint `.pptx`. Word extraction reads body paragraphs and tables, omitting
+  PowerPoint `.pptx`, PNG, and JPEG. Word extraction reads body paragraphs and tables, omitting
   headers, footers, comments, tracked deletions and embedded objects. PowerPoint
   extraction follows presentation order, labels slides, and excludes hidden slides,
   speaker notes, images and embedded objects. Office results use text offsets rather
   than PDF page numbers. Legacy `.doc`/`.ppt`, encrypted and macro-enabled Office
-  files are unsupported. External-link topics, video, and image OCR are unsupported. Readable text
+  files are unsupported. External-link topics and video are unsupported. Readable text
   may omit diagrams, formatting, and table structure. Open the source for these.
 - Text output defaults to 20,000 characters; use `next_offset` to continue.
   The maximum chunk is 50,000 characters. Files over 20 MiB and PDFs over 300 pages
@@ -239,6 +239,23 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
   Archives are limited to 2,000 entries, selected XML to 10 MiB per entry and
   40 MiB cumulatively, and XML nesting to 128 levels. Unsafe paths, duplicate entries,
   malformed XML and DTDs/entities are rejected; external relationships are never fetched.
+- PNG/JPEG images and PDF pages with no selectable text use local English OCR.
+  The engine and language model ship as pinned npm dependencies; recognition never
+  downloads models or sends course material to an OCR service, and writes no image,
+  text, or model cache to disk. Results include `ocr` metadata with page numbers,
+  skipped pages, and an approximate confidence score. Confidence is not a guarantee:
+  verify names, dates, marks, formulas and handwriting against the source.
+  Selectable-text PDF pages retain their existing extraction path; a page with some
+  selectable text is not OCRed to recover other text embedded in images.
+  At most five pages per PDF receive OCR, with further scanned pages explicitly
+  listed as skipped and `truncated: true`. Later selectable text is still returned.
+  Raster images/rendered pages are limited to 8 million pixels and 5000 pixels per
+  side. PDF scans render at 2x scale; oversized/unsupported embedded images may be
+  omitted by the PDF renderer. All OCR shares the existing 15-second extraction
+  deadline and worker queue. Large scans can time out; use smaller source files.
+  Search labels OCR matches and reports incomplete coverage for truncated files.
+  OCR is not applied to images embedded in Office documents or HTML, nor to
+  GIF, WebP, TIFF or other image formats.
 - Locked topics retain their navigation metadata and `locked: true`, but descriptions
   are suppressed and locked topics are excluded from material search.
 - Assignments, quizzes, announcements, modules, and topics are returned only when
