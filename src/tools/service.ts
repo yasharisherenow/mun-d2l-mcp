@@ -262,7 +262,7 @@ export class StudyService {
         matches.push({ topic_id: topic.id, title: topic.title, module_path: topic.module_path, page, snippet: text.slice(Math.max(0, found - 120), found + needle.length + 240), text_offset: found, source_url: topic.source_url });
       }
     }
-    return { course_id: courseId, query, matches, files_checked: Math.min(course.topics.length, maxFiles), complete: course.topics.length <= maxFiles && failures.length === 0, failures, note: 'Bounded local search. PDF results include extracted page numbers; HTML and plain-text materials use an exact text offset.' };
+    return { course_id: courseId, query, matches, files_checked: Math.min(course.topics.length, maxFiles), complete: course.topics.length <= maxFiles && failures.length === 0, failures, note: 'Bounded local search. PDF results include extracted page numbers; other supported materials use an exact text offset. PPTX text includes slide labels.' };
   }
 
   async calendarIcs(courseIds?: number[], days = 30, from = new Date().toISOString()) {

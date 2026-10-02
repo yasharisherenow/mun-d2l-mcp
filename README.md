@@ -64,7 +64,29 @@ codex mcp get mun-d2l-mcp
 
 This adds a separate MCP entry and preserves other servers. Restart Codex or reload
 MCP connections if the tools do not appear in an existing session. Rebuild after
-source changes and restart the MCP connection. There is no automatic updater.
+source changes and restart the MCP connection. Use the explicit update command below;
+there is no background automatic updater.
+
+## Update your checkout
+
+From this repository, run `npm run update` in PowerShell. It requires native
+Windows, Node.js 22+, Git, a clean `main` checkout (including no untracked files),
+and `main` tracking `origin/main` at `yasharisherenow/mun-d2l-mcp` on GitHub.
+Complete any active merge or rebase first. Existing Git authentication is used.
+Disconnect MCP connections using this checkout before updating: Windows can lock
+the native keyring module while a server is running, preventing `npm ci` from
+replacing it. The updater does not stop running clients or servers itself.
+
+The command fetches `main` and only fast-forwards: local commits ahead of GitHub or
+divergent history are refused. It never stashes, resets, or discards your changes.
+When new commits exist, it runs `npm ci`, installs Playwright Chromium, builds,
+and runs the offline MCP smoke check. If already current, it skips those steps.
+After success, **restart your MCP connection** to load the new build.
+
+On failure, the command stops, reports old/fetched commit IDs and the failed step,
+and prints recovery commands when source has already been updated. It does not
+roll back. Fix the cause and run the printed recovery commands before restarting
+the MCP connection; an already-current update does not retry a failed build.
 
 ## Session renewal and timeout handling
 
@@ -138,6 +160,7 @@ Try:
 | `npm run test-course -- <course-id>` | Check assignment, quiz, grade, and content permissions for one course |
 | `npm run logout` | Delete this app's local session and encryption key |
 | `npm run build` | Compile TypeScript to `dist/` |
+| `npm run update` | Safely fast-forward clean main, install dependencies/Chromium, build, and smoke-test; restart MCP afterward |
 | `npm run typecheck` | Type-check without writing build output |
 | `npm test` | Run offline tests using synthetic data |
 | `npm run security:audit` | Audit production dependencies for known vulnerabilities |
@@ -196,8 +219,13 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
   in `category_summaries` and must not be treated as earned grades. Individual API
   values include release status, which is unknown without a release date. Check
   the source grade page when interpreting marks. Private comments are not returned.
-- Material reading supports PDF, HTML, plain text, Markdown and CSV. External-link
-  topics, video, Word, PowerPoint, and image OCR are not supported. Readable text
+- Material reading supports PDF, HTML, plain text, Markdown, CSV, Word `.docx`,
+  and PowerPoint `.pptx`. Word extraction reads body paragraphs and tables, omitting
+  headers, footers, comments, tracked deletions and embedded objects. PowerPoint
+  extraction follows presentation order, labels slides, and excludes hidden slides,
+  speaker notes, images and embedded objects. Office results use text offsets rather
+  than PDF page numbers. Legacy `.doc`/`.ppt`, encrypted and macro-enabled Office
+  files are unsupported. External-link topics, video, and image OCR are unsupported. Readable text
   may omit diagrams, formatting, and table structure. Open the source for these.
 - Text output defaults to 20,000 characters; use `next_offset` to continue.
   The maximum chunk is 50,000 characters. Files over 20 MiB and PDFs over 300 pages
@@ -207,6 +235,10 @@ means elapsed 24-hour periods. Specify `from` for a particular starting instant.
   compressed responses fail closed before Playwright buffers their bodies.
   PDF and HTML extraction runs in a memory-limited worker with a 15-second deadline;
   extracted text is capped at 2,000,000 characters and reports `truncated`.
+  Office extraction uses the same worker limits and never extracts files to disk.
+  Archives are limited to 2,000 entries, selected XML to 10 MiB per entry and
+  40 MiB cumulatively, and XML nesting to 128 levels. Unsafe paths, duplicate entries,
+  malformed XML and DTDs/entities are rejected; external relationships are never fetched.
 - Locked topics retain their navigation metadata and `locked: true`, but descriptions
   are suppressed and locked topics are excluded from material search.
 - Assignments, quizzes, announcements, modules, and topics are returned only when

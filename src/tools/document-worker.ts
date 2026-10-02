@@ -1,6 +1,7 @@
 import { parentPort } from 'node:worker_threads';
 import { extractText, getDocumentProxy } from 'unpdf';
 import { convert } from 'html-to-text';
+import { extractOffice, officeMimes } from './office.js';
 
 const MAX_PAGES = 300;
 const MAX_TEXT_CHARACTERS = 2_000_000;
@@ -43,10 +44,14 @@ parentPort.once('message', async ({ bytes, mime }: { bytes: Uint8Array; mime: st
       const decoded = body.toString('utf8');
       truncated = decoded.length > MAX_TEXT_CHARACTERS;
       text = decoded.slice(0, MAX_TEXT_CHARACTERS);
-    } else throw { code: 'UNSUPPORTED_FILE', message: 'This material is not readable text or PDF. Open its source link in Brightspace.' };
+    } else if (officeMimes.includes(mime)) {
+      const result = await extractOffice(body, mime);
+      text = result.text;
+      truncated = result.truncated;
+    } else throw { code: 'UNSUPPORTED_FILE', message: 'This material is not supported text, PDF, DOCX, or PPTX. Open its source link in Brightspace.' };
     parentPort!.postMessage({ ok: true, result: { text, pages, pageOffsets, truncated } });
   } catch (error) {
     const safe = error as { code?: string; message?: string };
-    parentPort!.postMessage({ ok: false, code: safe.code ?? 'EXTRACTION_FAILED', message: safe.message ?? 'The document could not be read safely.' });
+    parentPort!.postMessage({ ok: false, code: safe.code ?? 'EXTRACTION_FAILED', message: safe.code ? safe.message : 'The document could not be read safely.' });
   }
 });

@@ -2,6 +2,32 @@
 
 This guide covers common issues, their causes, and recovery steps.
 
+## Updating safely
+
+Run `npm run update` from a clean `main` checkout tracking this repository's
+`origin/main`. Commit or move local changes and untracked files yourself; the
+updater never stashes or discards them. Finish any active Git operation first.
+Local-ahead or divergent history needs manual reconciliation before updating.
+
+If fetching fails, check Git authentication and network access. If installation,
+Chromium setup, build or smoke verification fails after the fast-forward, source
+stays updated. Fix the cause and run the recovery commands printed by the updater.
+Running update again when already current does not reinstall or rebuild.
+Restart the MCP connection only after recovery passes.
+If `npm ci` reports `EPERM` on the native keyring module, disconnect all MCP
+connections using this checkout and rerun the printed recovery commands. An
+interrupted `npm ci` can leave dependencies partially removed; complete recovery
+before reconnecting. The updater never terminates running processes itself.
+
+## Word and PowerPoint extraction
+
+Only unencrypted, non-macro `.docx` and `.pptx` files are supported. Convert legacy
+`.doc`/`.ppt` files to a supported format or read them directly in Brightspace.
+`EXTRACTION_FAILED` means package validation or parsing failed; diagnostics omit
+document contents. `EXTRACTION_LIMIT` means a worker, XML or archive limit was
+exceeded. Image-only documents need the source application; OCR is not included.
+Slide notes and hidden slides are excluded. Use `next_offset` for long documents.
+
 ## Windows Credential Manager
 
 ### Verifying Credential Manager is working

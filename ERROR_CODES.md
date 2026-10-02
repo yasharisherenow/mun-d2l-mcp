@@ -281,15 +281,28 @@ checked when a tool request begins, not by a background scheduler.
 
 **Message**: `EXTRACTION_LIMIT`
 
-**Cause**: A document's extracted text exceeded 2 million characters (after PDF/HTML parsing).
+**Cause**: Document extraction exceeded its 15-second worker deadline, worker memory
+limit, or Office archive/XML limits (2,000 entries, 10 MiB per selected XML part,
+40 MiB selected XML cumulatively, or nesting depth 128). A worker failure also
+returns this code. Text beyond 2 million characters is truncated and labeled
+`truncated`, rather than raising this error.
 
 **Recovery**:
-1. Request a smaller chunk:
-   - Use `offset` and `max_characters` to read part of the document
-   - Start with `max_characters=50000` and use `next_offset` to continue
-2. Open the document in Brightspace directly for full access
+1. Open the document in Brightspace directly or use a smaller/simplified source file
+2. Chunking with `offset` does not bypass parsing limits; extraction happens first
 
-**Prevention**: Large PDFs (300+ pages) or HTML dumps may hit this limit. Use targeted reading (specific sections) instead.
+PDFs over 300 pages and downloads over 20 MiB return `FILE_TOO_LARGE`.
+
+---
+
+### EXTRACTION_FAILED
+
+**Cause**: A document is malformed or Office package validation failed, including
+unsafe/duplicate archive paths, invalid relationships, malformed XML or DTDs/entities.
+Diagnostic messages omit document contents.
+
+**Recovery**: Open the source directly, or re-export a valid unencrypted `.docx`
+or `.pptx` file and retry. External relationships are never fetched.
 
 ---
 
@@ -312,11 +325,12 @@ checked when a tool request begins, not by a background scheduler.
 
 **Message**: `UNSUPPORTED_FILE`
 
-**Cause**: The file format is not supported for text extraction (e.g., video, image, Word, PowerPoint, executable).
+**Cause**: The file format is unsupported (e.g., video, image, executable, legacy
+`.doc`/`.ppt`, encrypted or macro-enabled Office files).
 
 **Recovery**:
 - Open the resource in Brightspace and view/read it manually
-- Supported formats: PDF, HTML, plain text, Markdown, CSV
+- Supported formats: PDF, HTML, plain text, Markdown, CSV, Word `.docx`, PowerPoint `.pptx`
 
 ---
 

@@ -5,6 +5,11 @@ repository history. The project has not published a tagged release yet.
 
 ## Unreleased
 
+- Added bounded DOCX/PPTX text reading and search through existing material tools,
+  preserving worker isolation and rejecting encrypted/macro-enabled Office files.
+- Added `npm run update` for clean-main fast-forward updates, dependency/Chromium
+  installation, build and smoke verification, with explicit MCP restart guidance.
+
 - Added bounded authentication and MCP queue waits with classified timeout errors.
 - Added a redacted, manual live verifier and explicit API-version baseline handling.
 - Consolidated Windows CI across Node.js 22 and 24, including a weekly offline run.

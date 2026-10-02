@@ -1,6 +1,7 @@
 import { Worker } from 'node:worker_threads';
 import { AppError } from '../errors.js';
 import { BoundedSemaphore } from '../concurrency.js';
+import { officeMimes } from './office.js';
 
 const extractionSlots = new BoundedSemaphore(2, 4, 'Document extraction');
 
@@ -12,12 +13,13 @@ export interface ExtractedDocument {
 }
 
 export async function extractDocument(body: Buffer, mime: string): Promise<ExtractedDocument> {
+  if (body.length > 20 * 1024 * 1024) throw new AppError('FILE_TOO_LARGE', 'This file exceeds the 20 MiB reading limit.');
   if (['text/plain', 'text/markdown', 'text/csv'].includes(mime)) {
     const decoded = body.toString('utf8');
     return { text: decoded.slice(0, 2_000_000), pages: null, pageOffsets: null, truncated: decoded.length > 2_000_000 };
   }
-  if (body.subarray(0, 5).toString() !== '%PDF-' && !['text/html', 'application/xhtml+xml'].includes(mime)) {
-    throw new AppError('UNSUPPORTED_FILE', 'This material is not readable text or PDF. Open its source link in Brightspace.');
+  if (body.subarray(0, 5).toString() !== '%PDF-' && !['text/html', 'application/xhtml+xml', ...officeMimes].includes(mime)) {
+    throw new AppError('UNSUPPORTED_FILE', 'This material is not supported text, PDF, DOCX, or PPTX. Open its source link in Brightspace.');
   }
   if (['text/html', 'application/xhtml+xml'].includes(mime) && /\/d2l\/login|<title>[^<]*login/i.test(body.toString('utf8', 0, Math.min(body.length, 100_000)))) {
     throw new AppError('AUTH_REQUIRED', 'Brightspace returned a login page. Run npm run login.');
@@ -46,6 +48,10 @@ async function extractInWorker(body: Buffer, mime: string): Promise<ExtractedDoc
     worker.once('error', () => {
       finish();
       reject(new AppError('EXTRACTION_LIMIT', 'Document extraction failed inside its isolated worker. Open the source in Brightspace.'));
+    });
+    worker.once('exit', () => {
+      finish();
+      reject(new AppError('EXTRACTION_LIMIT', 'Document extraction worker stopped before completing. Open the source in Brightspace.'));
     });
     worker.postMessage({ bytes, mime }, [bytes.buffer]);
   });
